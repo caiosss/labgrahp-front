@@ -1,11 +1,20 @@
 import { BarChart3, Table2 } from "lucide-react";
+import { useProjectStore } from "../store/project-store";
+import type { ProjectDto } from "../types/project-dto";
 
 interface HomePageProps {
     onCreateChart: () => void;
     onCreateTable: () => void;
+    onOpenProject: (project: ProjectDto) => void;
 }
 
-export const HomePage = ({ onCreateChart, onCreateTable }: HomePageProps) => {
+export const HomePage = ({
+    onCreateChart,
+    onCreateTable,
+    onOpenProject,
+}: HomePageProps) => {
+    const projects = useProjectStore((state) => state.projects);
+
     return (
         <main className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 sm:py-10">
             <div className="mx-auto max-w-6xl space-y-8 sm:space-y-10">
@@ -63,9 +72,36 @@ export const HomePage = ({ onCreateChart, onCreateTable }: HomePageProps) => {
                         Projetos recentes
                     </h2>
 
-                    <div className="rounded-xl border border-dashed border-slate-300 p-5 text-center text-sm text-slate-500 sm:p-8">
-                        Nenhum projeto salvo ainda.
-                    </div>
+                    {projects.length === 0 ? (
+                        <div className="rounded-xl border border-dashed border-slate-300 p-5 text-center text-sm text-slate-500 sm:p-8">
+                            Nenhum projeto salvo ainda.
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                            {projects.map((project) => (
+                                <button
+                                    key={project.id}
+                                    onClick={() => onOpenProject(project)}
+                                    className="cursor-pointer rounded-xl border border-slate-200 p-4 text-left transition hover:border-blue-500 hover:bg-slate-50"
+                                >
+                                    <div className="mb-2 flex items-center justify-between gap-3">
+                                        <span className="font-medium text-slate-900">
+                                            {project.name}
+                                        </span>
+
+                                        <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600">
+                                            {project.type === "chart" ? "Grafico" : "Tabela"}
+                                        </span>
+                                    </div>
+
+                                    <p className="text-xs text-slate-500">
+                                        Atualizado em{" "}
+                                        {new Date(project.updatedAt).toLocaleString("pt-BR")}
+                                    </p>
+                                </button>
+                            ))}
+                        </div>
+                    )}
                 </section>
             </div>
         </main>
