@@ -20,6 +20,7 @@ interface ChartEditorPageProps {
 export const ChartEditorPage = ({ onBack, projectId }: ChartEditorPageProps) => {
     const editor = useChartEditor(projectId);
     const onboarding = useOnboardingTour("chart-editor", chartEditorTourSteps);
+    
     const handleClearChart = () => {
         const confirmed = window.confirm(
             "Restaurar o gráfico para o exemplo inicial? O rascunho atual será substituído.",

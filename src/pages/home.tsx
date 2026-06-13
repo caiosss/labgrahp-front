@@ -15,6 +15,7 @@ export const HomePage = ({
 }: HomePageProps) => {
     const projects = useProjectStore((state) => state.projects);
     const chartDraft = useProjectStore((state) => state.chartDraft);
+    const tableDraft = useProjectStore((state) => state.tableDraft);
 
     return (
         <main className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 sm:py-10">
@@ -72,6 +73,28 @@ export const HomePage = ({
                     <h2 className="mb-4 text-lg font-semibold text-slate-900">
                         Projetos recentes
                     </h2>
+
+                    {tableDraft && (
+                        <button
+                            onClick={onCreateTable}
+                            className="mb-3 w-full cursor-pointer rounded-xl border border-blue-200 bg-blue-50 p-4 text-left transition hover:border-blue-500"
+                        >
+                            <div className="mb-2 flex items-center justify-between gap-3">
+                                <span className="font-medium text-blue-950">
+                                    Rascunho de tabela
+                                </span>
+
+                                <span className="rounded-full bg-blue-100 px-2 py-1 text-xs text-blue-700">
+                                    Autosalvo
+                                </span>
+                            </div>
+
+                            <p className="text-xs text-blue-700">
+                                Atualizado em{" "}
+                                {new Date(tableDraft.updatedAt).toLocaleString("pt-BR")}
+                            </p>
+                        </button>
+                    )}
 
                     {chartDraft && (
                         <button

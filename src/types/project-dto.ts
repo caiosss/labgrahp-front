@@ -32,3 +32,12 @@ export interface ChartDraftDto {
     updatedAt: string;
     chart: ChartConfig;
 }
+
+export interface TableDraftDto {
+    id: string;
+    type: "table-draft";
+    projectId?: string;
+    schemaVersion: 1;
+    updatedAt: string;
+    table: AbntTableConfig;
+}

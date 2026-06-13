@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { AbntColumn, AbntRow, AbntTableConfig } from "../types/table";
 import { useProjectStore } from "../store/project-store";
 import { initialTable } from "../utils/constants/initial-table";
@@ -9,8 +9,19 @@ import { cloneProjectConfig, createTableProjectDto } from "../utils/project-dto"
 export const useTableEditor = (projectId?: string) => {
     const getProjectById = useProjectStore((state) => state.getProjectById);
     const upsertProject = useProjectStore((state) => state.upsertProject);
+    const tableDraft = useProjectStore((state) => state.tableDraft);
+    const setTableDraft = useProjectStore((state) => state.setTableDraft);
+    const clearTableDraft = useProjectStore((state) => state.clearTableDraft);
     const sourceProject = projectId ? getProjectById(projectId) : undefined;
-    const sourceTable = sourceProject?.type === "table" ? sourceProject.table : initialTable;
+
+    const matchingDraft =
+        tableDraft &&
+            (!sourceProject ||
+                (sourceProject.type === "table" && tableDraft.projectId === sourceProject.id))
+            ? tableDraft
+            : undefined;
+    
+            const sourceTable = sourceProject?.type === "table" ? sourceProject.table : matchingDraft?.table ?? initialTable;
 
     const previewRef = useRef<HTMLDivElement>(null);
     const [currentProjectId, setCurrentProjectId] = useState<string | undefined>(
@@ -23,6 +34,8 @@ export const useTableEditor = (projectId?: string) => {
         cloneProjectConfig(sourceTable),
     );
 
+    const currentDraftIdRef = useRef<string | undefined>(matchingDraft?.id);
+
     const exportPNG = async () => {
         if (!previewRef.current) {
             return;
@@ -33,6 +46,20 @@ export const useTableEditor = (projectId?: string) => {
             `${table.title || "tabela-abnt"}.png`,
         );
     };
+
+    useEffect(() => {
+        const draft = {
+            id: currentDraftIdRef.current ?? createRandomUUID(),
+            type: "table-draft" as const,
+            projectId: currentProjectId,
+            schemaVersion: 1 as const,
+            updatedAt: new Date().toISOString(),
+            table: cloneProjectConfig(table),
+        };
+
+        currentDraftIdRef.current = draft.id;
+        setTableDraft(draft);
+    }, [table, currentProjectId, setTableDraft]);
 
     const updateTable = <K extends keyof AbntTableConfig>(
         key: K,
@@ -156,10 +183,18 @@ export const useTableEditor = (projectId?: string) => {
         setLastSavedAt(projectDto.updatedAt);
     };
 
+    const clearTable = () => {
+        clearTableDraft();
+        currentDraftIdRef.current = undefined;
+        setLastSavedAt(undefined);
+        setTable(cloneProjectConfig(initialTable));
+    };
+
     return {
         table,
         previewRef,
         lastSavedAt,
+        lastDraftSavedAt: tableDraft?.updatedAt,
         exportPNG,
         updateTable,
         updateAppearance,
@@ -170,5 +205,6 @@ export const useTableEditor = (projectId?: string) => {
         removeRow,
         updateCell,
         saveProject,
+        clearTable,
     };
 };

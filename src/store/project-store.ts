@@ -1,11 +1,12 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import type { OnboardingTourId } from "../types/onboarding";
-import type { ChartDraftDto, ProjectDto } from "../types/project-dto";
+import type { ChartDraftDto, ProjectDto, TableDraftDto } from "../types/project-dto";
 
 interface ProjectStoreState {
     projects: ProjectDto[];
     chartDraft?: ChartDraftDto;
+    tableDraft?: TableDraftDto;
     onboarding: {
         seenTours: Partial<Record<OnboardingTourId, boolean>>;
     };
@@ -13,7 +14,9 @@ interface ProjectStoreState {
     removeProject: (projectId: string) => void;
     getProjectById: (projectId: string) => ProjectDto | undefined;
     setChartDraft: (draft: ChartDraftDto) => void;
+    setTableDraft: (draft: TableDraftDto) => void;
     clearChartDraft: () => void;
+    clearTableDraft: () => void;
     setOnboardingTourSeen: (tourId: OnboardingTourId, seen?: boolean) => void;
 }
 
@@ -22,6 +25,7 @@ export const useProjectStore = create<ProjectStoreState>()(
         (set, get) => ({
             projects: [],
             chartDraft: undefined,
+            tableDraft: undefined,
             onboarding: {
                 seenTours: {},
             },
@@ -53,9 +57,17 @@ export const useProjectStore = create<ProjectStoreState>()(
                 set({
                     chartDraft: draft,
                 }),
+            setTableDraft: (draft) =>
+                set({
+                    tableDraft: draft,
+                }),
             clearChartDraft: () =>
                 set({
                     chartDraft: undefined,
+                }),
+            clearTableDraft: () =>
+                set({
+                    tableDraft: undefined,
                 }),
             setOnboardingTourSeen: (tourId, seen = true) =>
                 set((state) => ({

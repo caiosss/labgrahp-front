@@ -1,5 +1,5 @@
 import type { ChartConfig } from "../types/chart";
-import type { ChartDraftDto, ProjectDto } from "../types/project-dto";
+import type { ChartDraftDto, ProjectDto, TableDraftDto } from "../types/project-dto";
 import type { AbntTableConfig } from "../types/table";
 import { createRandomUUID } from "./create-random-uuid";
 
@@ -59,6 +59,21 @@ export const createChartDraftDto = (
         schemaVersion: 1,
         updatedAt: new Date().toISOString(),
         chart: cloneConfig(chart),
+    };
+};
+
+export const createTableDraftDto = (
+    table: AbntTableConfig,
+    currentDraft?: TableDraftDto,
+    projectId?: string,
+): TableDraftDto => {
+    return {
+        id: currentDraft?.id ?? createRandomUUID(),
+        type: "table-draft",
+        projectId,
+        schemaVersion: 1,
+        updatedAt: new Date().toISOString(),
+        table: cloneConfig(table),
     };
 };
 

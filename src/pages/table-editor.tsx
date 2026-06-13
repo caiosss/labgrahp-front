@@ -19,6 +19,16 @@ export const TableEditorPage = ({ onBack, projectId }: TableEditorPageProps) => 
     const editor = useTableEditor(projectId);
     const onboarding = useOnboardingTour("table-editor", tableEditorTourSteps);
 
+    const handleClearTable = () => {
+        const confirmed = window.confirm(
+            "Restaurar a tabela para o exemplo inicial? O rascunho atual será substituído.",
+        );
+
+        if (confirmed) {
+            editor.clearTable();
+        }
+    };
+
     return (
         <main className="min-h-screen bg-slate-50 px-3 py-4 sm:px-6 sm:py-6">
             <div className="mx-auto max-w-7xl space-y-6">
@@ -28,8 +38,11 @@ export const TableEditorPage = ({ onBack, projectId }: TableEditorPageProps) => 
                         description="Edite os dados a esquerda e visualize o resultado a direita."
                         onBack={onBack}
                         onSave={editor.saveProject}
+                        onClear={handleClearTable}
                         onStartTour={onboarding.startTour}
                         lastSavedAt={editor.lastSavedAt}
+                        lastDraftSavedAt={editor.lastDraftSavedAt}
+                        clearLabel="Limpar tabela"
                     />
                 </div>
 
