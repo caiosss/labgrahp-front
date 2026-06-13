@@ -19,7 +19,7 @@ export const chartEditorTourSteps: OnboardingStep[] = [
         target: "chart-identification",
         title: "Identificação do gráfico",
         description:
-            "Comece pelo título e pelos nomes dos eixos. Isso ajuda o usuário a entender o que está sendo comparado.",
+            "Comece pelo título e pelos nomes dos eixos. Isso ajuda a entender o que está sendo comparado.",
         example:
             "Exemplo: X = Tempo (min) e Y = Absorbância (AU).",
     },
@@ -29,7 +29,7 @@ export const chartEditorTourSteps: OnboardingStep[] = [
         description:
             "Use limites e intervalos quando precisar padronizar a leitura entre gráficos diferentes.",
         example:
-            "Exemplo: deixe mínimo e máximo vazios para o Plotly calcular automaticamente.",
+            "Exemplo: deixe mínimo e máximo vazios para o gráfico calcular automaticamente.",
     },
     {
         target: "chart-appearance",
@@ -51,7 +51,7 @@ export const chartEditorTourSteps: OnboardingStep[] = [
         target: "chart-preview",
         title: "Preview",
         description:
-            "Confira o resultado antes de exportar. Em telas pequenas, esta área pode ser rolada horizontalmente.",
+            "Confira o resultado antes de exportar. Em telas pequenas, esta área pode ser rolada horizontalmente. Aperte duas vezes para voltar ao estado inicial e confira as ferramentas acima do título do gráfico.",
         example:
             "Exemplo: valide título, legenda e escala antes de usar o botão de câmera do gráfico.",
     },

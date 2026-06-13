@@ -1,1 +1,55 @@
 @import "tailwindcss";
+
+@keyframes rainbow-border-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+.rainbow-action-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-color: transparent;
+  background: transparent;
+}
+
+.rainbow-action-card::before {
+  content: "";
+  position: absolute;
+  inset: -45%;
+  z-index: -2;
+  pointer-events: none;
+  background: conic-gradient(
+    from 0deg,
+    rgba(37, 99, 235, 1),
+    rgba(20, 184, 166, 1),
+    rgba(250, 204, 21, 1),
+    rgba(244, 63, 94, 1),
+    rgba(168, 85, 247, 1),
+    rgba(37, 99, 235, 1)
+  );
+  animation: rainbow-border-spin 9s linear infinite;
+  filter: blur(2px);
+  opacity: 0.58;
+}
+
+.rainbow-action-card::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
+  background: white;
+}
+
+.rainbow-action-card:hover::before {
+  opacity: 0.8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rainbow-action-card::before {
+    animation: none;
+  }
+}

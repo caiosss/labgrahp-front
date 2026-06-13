@@ -25,7 +25,7 @@ export const HomePage = ({
                     </h1>
 
                     <p className="max-w-2xl text-slate-600">
-                        Crie gráficos científicos e tabelas acadêmicas personalizadas,
+                        Crie gráficos e tabelas acadêmicas personalizadas,
                         com controle de dados, eixos, títulos, aparência e exportação.
                     </p>
                 </header>
@@ -33,7 +33,7 @@ export const HomePage = ({
                 <section className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <button
                         onClick={onCreateChart}
-                        className="cursor-pointer rounded-xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-blue-500 hover:shadow-md sm:rounded-2xl sm:p-6"
+                        className="rainbow-action-card cursor-pointer rounded-xl border border-slate-200 p-4 text-left shadow-sm transition hover:border-blue-500 hover:shadow-md sm:rounded-2xl sm:p-6"
                     >
                         <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50">
                             <BarChart3 className="text-blue-600" />
@@ -51,7 +51,7 @@ export const HomePage = ({
 
                     <button
                         onClick={onCreateTable}
-                        className="cursor-pointer rounded-xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-blue-500 hover:shadow-md sm:rounded-2xl sm:p-6"
+                        className="rainbow-action-card cursor-pointer rounded-xl border border-slate-200 p-4 text-left shadow-sm transition hover:border-blue-500 hover:shadow-md sm:rounded-2xl sm:p-6"
                     >
                         <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50">
                             <Table2 className="text-blue-600" />

@@ -163,7 +163,7 @@ export const OnboardingTour = ({
 
             <aside
                 aria-modal="true"
-                className="pointer-events-auto fixed rounded-xl bg-white p-4 shadow-2xl ring-1 ring-slate-200 sm:p-5"
+                className="pointer-events-auto rainbow-action-card border-slate-200 fixed rounded-xl  p-4 shadow-2xl ring-1 ring-slate-200 sm:p-5"
                 role="dialog"
                 style={tooltipStyle}
             >
