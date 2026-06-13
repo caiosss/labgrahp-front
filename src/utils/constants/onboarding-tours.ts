@@ -13,7 +13,7 @@ export const chartEditorTourSteps: OnboardingStep[] = [
         description:
             "Aqui ficam as ações globais: voltar, salvar o projeto, limpar o gráfico e abrir este tutorial novamente.",
         example:
-            "Exemplo: depois de ajustar os dados e o visual, use Salvar projeto para manter uma versão na lista inicial.",
+            "depois de ajustar os dados e o visual, use Salvar projeto para manter uma versão na lista inicial.",
     },
     {
         target: "chart-identification",
@@ -21,7 +21,7 @@ export const chartEditorTourSteps: OnboardingStep[] = [
         description:
             "Comece pelo título e pelos nomes dos eixos. Isso ajuda a entender o que está sendo comparado.",
         example:
-            "Exemplo: X = Tempo (min) e Y = Absorbância (AU).",
+            "  X = Tempo (min) e Y = Absorbância (AU).",
     },
     {
         target: "chart-axis-scale",
@@ -29,7 +29,7 @@ export const chartEditorTourSteps: OnboardingStep[] = [
         description:
             "Use limites e intervalos quando precisar padronizar a leitura entre gráficos diferentes.",
         example:
-            "Exemplo: deixe mínimo e máximo vazios para o gráfico calcular automaticamente.",
+            "  deixe mínimo e máximo vazios para o gráfico calcular automaticamente.",
     },
     {
         target: "chart-appearance",
@@ -37,7 +37,7 @@ export const chartEditorTourSteps: OnboardingStep[] = [
         description:
             "Ajuste tipo de visualização, grade, legenda, fonte e tamanho final antes de baixar a imagem.",
         example:
-            "Exemplo: linha com pontos é útil para séries experimentais com poucos pontos.",
+            "  linha com pontos é útil para séries experimentais com poucos pontos.",
     },
     {
         target: "chart-series",
@@ -45,7 +45,7 @@ export const chartEditorTourSteps: OnboardingStep[] = [
         description:
             "Cada série representa um conjunto de pontos ou uma curva. O preview é atualizado conforme você edita.",
         example:
-            "Exemplo: use Série manual para pontos X/Y e Curva de pico para gerar uma curva gaussiana.",
+            "  use Série manual para pontos X/Y e Curva de pico para gerar uma curva gaussiana.",
     },
     {
         target: "chart-preview",
@@ -53,7 +53,7 @@ export const chartEditorTourSteps: OnboardingStep[] = [
         description:
             "Confira o resultado antes de exportar. Em telas pequenas, esta área pode ser rolada horizontalmente. Aperte duas vezes para voltar ao estado inicial e confira as ferramentas acima do título do gráfico.",
         example:
-            "Exemplo: valide título, legenda e escala antes de usar o botão de câmera do gráfico.",
+            "  valide título, legenda e escala antes de usar o botão de câmera do gráfico.",
     },
 ];
 
@@ -64,7 +64,7 @@ export const tableEditorTourSteps: OnboardingStep[] = [
         description:
             "Use o cabeçalho para salvar o projeto, voltar para o início ou reabrir este tutorial.",
         example:
-            "Exemplo: salve a tabela quando terminar de ajustar linhas, colunas e aparência.",
+            "  salve a tabela quando terminar de ajustar linhas, colunas e aparência.",
     },
     {
         target: "table-basic",
@@ -72,7 +72,7 @@ export const tableEditorTourSteps: OnboardingStep[] = [
         description:
             "Defina título, fonte e aparência antes de revisar o conteúdo da tabela.",
         example:
-            "Exemplo: use a fonte para indicar de onde vieram os dados apresentados.",
+            "  use a fonte para indicar de onde vieram os dados apresentados.",
     },
     {
         target: "table-columns",
@@ -80,7 +80,7 @@ export const tableEditorTourSteps: OnboardingStep[] = [
         description:
             "Crie colunas com nomes claros para facilitar a leitura e manter a tabela organizada.",
         example:
-            "Exemplo: Concentração, Absorbância e Desvio padrão.",
+            "  Concentração, Absorbância e Desvio padrão.",
     },
     {
         target: "table-rows",
@@ -88,7 +88,7 @@ export const tableEditorTourSteps: OnboardingStep[] = [
         description:
             "Preencha os valores linha por linha. A pré-visualização acompanha as alterações.",
         example:
-            "Exemplo: cada linha pode representar uma amostra ou uma condição experimental.",
+            "  cada linha pode representar uma amostra ou uma condição experimental.",
     },
     {
         target: "table-preview",
@@ -96,6 +96,6 @@ export const tableEditorTourSteps: OnboardingStep[] = [
         description:
             "Confira o layout final antes de baixar a imagem da tabela.",
         example:
-            "Exemplo: revise quebras de texto e alinhamento antes da exportação.",
+            "  revise quebras de texto e alinhamento antes da exportação.",
     },
 ];
