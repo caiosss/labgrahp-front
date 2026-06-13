@@ -18,10 +18,10 @@ export const TableBasicSettings = ({
     updateAppearance,
 }: TableBasicSettingsProps) => {
     return (
-        <>
+        <section data-tour="table-basic" className="space-y-4">
             <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-700">
-                    Titulo da tabela
+                    Título da tabela
                 </label>
 
                 <textarea
@@ -42,7 +42,7 @@ export const TableBasicSettings = ({
             </div>
 
             <div className="space-y-3 rounded-xl border border-slate-200 p-4">
-                <h2 className="font-semibold text-slate-900">Aparencia</h2>
+                <h2 className="font-semibold text-slate-900">Aparência</h2>
 
                 <div className="space-y-2">
                     <label className="text-sm font-medium text-slate-700">Fonte</label>
@@ -127,6 +127,6 @@ export const TableBasicSettings = ({
                     Mostrar linhas horizontais
                 </label>
             </div>
-        </>
+        </section>
     );
 };

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ChartAxisConfig, ChartConfig, ChartSeries, DataPoint } from "../types/chart";
 import { useProjectStore } from "../store/project-store";
 import { initialChart } from "../utils/constants/initial-chart";
@@ -9,18 +9,44 @@ import { cloneProjectConfig, createChartProjectDto } from "../utils/project-dto"
 export const useChartEditor = (projectId?: string) => {
     const getProjectById = useProjectStore((state) => state.getProjectById);
     const upsertProject = useProjectStore((state) => state.upsertProject);
+    const chartDraft = useProjectStore((state) => state.chartDraft);
+    const setChartDraft = useProjectStore((state) => state.setChartDraft);
+    const clearChartDraft = useProjectStore((state) => state.clearChartDraft);
     const sourceProject = projectId ? getProjectById(projectId) : undefined;
-    const sourceChart = sourceProject?.type === "chart" ? sourceProject.chart : initialChart;
+    const matchingDraft =
+        chartDraft &&
+            (!sourceProject ||
+                (sourceProject.type === "chart" && chartDraft.projectId === sourceProject.id))
+            ? chartDraft
+            : undefined;
+    const sourceChart =
+        matchingDraft?.chart ??
+        (sourceProject?.type === "chart" ? sourceProject.chart : initialChart);
 
     const [currentProjectId, setCurrentProjectId] = useState<string | undefined>(
-        sourceProject?.type === "chart" ? sourceProject.id : undefined,
+        sourceProject?.type === "chart" ? sourceProject.id : matchingDraft?.projectId,
     );
     const [lastSavedAt, setLastSavedAt] = useState<string | undefined>(
         sourceProject?.type === "chart" ? sourceProject.updatedAt : undefined,
     );
+    const currentDraftIdRef = useRef<string | undefined>(matchingDraft?.id);
     const [chart, setChart] = useState<ChartConfig>(() =>
         cloneProjectConfig(sourceChart),
     );
+
+    useEffect(() => {
+        const draft = {
+            id: currentDraftIdRef.current ?? createRandomUUID(),
+            type: "chart-draft" as const,
+            projectId: currentProjectId,
+            schemaVersion: 1 as const,
+            updatedAt: new Date().toISOString(),
+            chart: cloneProjectConfig(chart),
+        };
+
+        currentDraftIdRef.current = draft.id;
+        setChartDraft(draft);
+    }, [chart, currentProjectId, setChartDraft]);
 
     const updateChart = <K extends keyof ChartConfig>(
         key: K,
@@ -235,9 +261,17 @@ export const useChartEditor = (projectId?: string) => {
         setLastSavedAt(projectDto.updatedAt);
     };
 
+    const clearChart = () => {
+        clearChartDraft();
+        currentDraftIdRef.current = undefined;
+        setLastSavedAt(undefined);
+        setChart(cloneProjectConfig(initialChart));
+    };
+
     return {
         chart,
         lastSavedAt,
+        lastDraftSavedAt: chartDraft?.updatedAt,
         updateChart,
         updateAxis,
         updateSeries,
@@ -250,5 +284,6 @@ export const useChartEditor = (projectId?: string) => {
         addGaussianPeakSeries,
         updateGaussianPeak,
         saveProject,
+        clearChart,
     };
 };

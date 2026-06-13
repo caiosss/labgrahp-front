@@ -3,10 +3,14 @@
 import { ChartAppearanceSection } from "../components/chart/editor/chart-appearance-section";
 import { ChartAxisScaleSection } from "../components/chart/editor/chart-axis-scale-section";
 import { ChartBasicSettings } from "../components/chart/editor/chart-basic-settings";
+import { ChartEditorGuide } from "../components/chart/editor/chart-editor-guide";
 import { ChartPreviewPanel } from "../components/chart/editor/chart-preview-panel";
 import { ChartSeriesSection } from "../components/chart/editor/chart-series-section";
 import { EditorPageHeader } from "../components/editor/editor-page-header";
+import { OnboardingTour } from "../components/onboarding/onboarding-tour";
 import { useChartEditor } from "../hooks/use-chart-editor";
+import { useOnboardingTour } from "../hooks/use-onboarding-tour";
+import { chartEditorTourSteps } from "../utils/constants/onboarding-tours";
 
 interface ChartEditorPageProps {
     onBack: () => void;
@@ -15,20 +19,38 @@ interface ChartEditorPageProps {
 
 export const ChartEditorPage = ({ onBack, projectId }: ChartEditorPageProps) => {
     const editor = useChartEditor(projectId);
+    const onboarding = useOnboardingTour("chart-editor", chartEditorTourSteps);
+    const handleClearChart = () => {
+        const confirmed = window.confirm(
+            "Restaurar o gráfico para o exemplo inicial? O rascunho atual será substituído.",
+        );
+
+        if (confirmed) {
+            editor.clearChart();
+        }
+    };
 
     return (
         <main className="min-h-screen bg-slate-50 px-3 py-4 sm:px-6 sm:py-6">
             <div className="mx-auto max-w-7xl space-y-6">
-                <EditorPageHeader
-                    title="Editor de grafico"
-                    description="Edite os dados a esquerda e visualize o grafico antes do download."
-                    onBack={onBack}
-                    onSave={editor.saveProject}
-                    lastSavedAt={editor.lastSavedAt}
-                />
+                <div data-tour="chart-editor-header">
+                    <EditorPageHeader
+                        title="Criação de gráfico"
+                        description="Monte o gráfico por etapas e mantenha o rascunho salvo automaticamente."
+                        onBack={onBack}
+                        onSave={editor.saveProject}
+                        onClear={handleClearChart}
+                        onStartTour={onboarding.startTour}
+                        lastSavedAt={editor.lastSavedAt}
+                        lastDraftSavedAt={editor.lastDraftSavedAt}
+                        clearLabel="Limpar gráfico"
+                    />
+                </div>
 
                 <div className="grid min-w-0 grid-cols-1 gap-4 lg:gap-6 xl:grid-cols-[minmax(360px,520px)_minmax(0,1fr)]">
                     <section className="min-w-0 space-y-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:rounded-2xl sm:p-5">
+                        <ChartEditorGuide />
+
                         <ChartBasicSettings
                             chart={editor.chart}
                             updateChart={editor.updateChart}
@@ -62,6 +84,15 @@ export const ChartEditorPage = ({ onBack, projectId }: ChartEditorPageProps) => 
                     <ChartPreviewPanel chart={editor.chart} />
                 </div>
             </div>
+
+            <OnboardingTour
+                currentStepIndex={onboarding.currentStepIndex}
+                isOpen={onboarding.isOpen}
+                onNext={onboarding.nextStep}
+                onPrevious={onboarding.previousStep}
+                onSkip={onboarding.skipTour}
+                steps={chartEditorTourSteps}
+            />
         </main>
     );
 };

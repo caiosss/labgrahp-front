@@ -108,8 +108,16 @@ export const ChartAxisScaleSection = ({
     updateAxis,
 }: ChartAxisScaleSectionProps) => {
     return (
-        <div className="space-y-3 rounded-xl border border-slate-200 p-4">
-            <h2 className="font-semibold text-slate-900">Escala dos eixos</h2>
+        <div
+            data-tour="chart-axis-scale"
+            className="space-y-3 rounded-xl border border-slate-200 p-4"
+        >
+            <div>
+                <h2 className="font-semibold text-slate-900">Escala dos eixos</h2>
+                <p className="text-sm text-slate-500">
+                    Deixe mínimo e máximo em branco para usar escala automatica.
+                </p>
+            </div>
 
             <AxisScaleFields
                 title="Eixo X"

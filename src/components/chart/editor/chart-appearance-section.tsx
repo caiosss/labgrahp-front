@@ -12,12 +12,20 @@ export const ChartAppearanceSection = ({
     updateAppearance,
 }: ChartAppearanceSectionProps) => {
     return (
-        <div className="space-y-3 rounded-xl border border-slate-200 p-4">
-            <h2 className="font-semibold text-slate-900">Aparencia</h2>
+        <div
+            data-tour="chart-appearance"
+            className="space-y-3 rounded-xl border border-slate-200 p-4"
+        >
+            <div>
+                <h2 className="font-semibold text-slate-900">Visual e exportação</h2>
+                <p className="text-sm text-slate-500">
+                    Defina como o gráfico aparece na tela e no PNG exportado.
+                </p>
+            </div>
 
             <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-700">
-                    Tipo de grafico
+                    Tipo de visualizacao
                 </label>
 
                 <select
@@ -36,7 +44,7 @@ export const ChartAppearanceSection = ({
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="space-y-2">
                     <label className="text-sm font-medium text-slate-700">
-                        Largura
+                        Largura do PNG
                     </label>
 
                     <input
@@ -51,7 +59,7 @@ export const ChartAppearanceSection = ({
 
                 <div className="space-y-2">
                     <label className="text-sm font-medium text-slate-700">
-                        Altura
+                        Altura do PNG
                     </label>
 
                     <input
@@ -68,7 +76,7 @@ export const ChartAppearanceSection = ({
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="space-y-2">
                     <label className="text-sm font-medium text-slate-700">
-                        Fonte
+                        Fonte dos textos
                     </label>
 
                     <select
@@ -87,7 +95,7 @@ export const ChartAppearanceSection = ({
 
                 <div className="space-y-2">
                     <label className="text-sm font-medium text-slate-700">
-                        Tamanho do titulo
+                        Tamanho do título
                     </label>
 
                     <input
@@ -104,7 +112,7 @@ export const ChartAppearanceSection = ({
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="space-y-2">
                     <label className="text-sm font-medium text-slate-700">
-                        Fundo do grafico
+                        Fundo do gráfico
                     </label>
 
                     <input

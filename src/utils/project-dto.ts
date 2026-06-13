@@ -1,5 +1,5 @@
 import type { ChartConfig } from "../types/chart";
-import type { ProjectDto } from "../types/project-dto";
+import type { ChartDraftDto, ProjectDto } from "../types/project-dto";
 import type { AbntTableConfig } from "../types/table";
 import { createRandomUUID } from "./create-random-uuid";
 
@@ -21,7 +21,7 @@ export const createChartProjectDto = (
     return {
         id: isChartProject ? currentProject.id : createRandomUUID(),
         type: "chart",
-        name: chart.title.trim() || "Grafico sem titulo",
+        name: chart.title.trim() || "Grafico sem título",
         schemaVersion: 1,
         createdAt: isChartProject ? currentProject.createdAt : now,
         updatedAt: now,
@@ -39,11 +39,26 @@ export const createTableProjectDto = (
     return {
         id: isTableProject ? currentProject.id : createRandomUUID(),
         type: "table",
-        name: table.title.trim() || "Tabela sem titulo",
+        name: table.title.trim() || "Tabela sem título",
         schemaVersion: 1,
         createdAt: isTableProject ? currentProject.createdAt : now,
         updatedAt: now,
         table: cloneConfig(table),
+    };
+};
+
+export const createChartDraftDto = (
+    chart: ChartConfig,
+    currentDraft?: ChartDraftDto,
+    projectId?: string,
+): ChartDraftDto => {
+    return {
+        id: currentDraft?.id ?? createRandomUUID(),
+        type: "chart-draft",
+        projectId,
+        schemaVersion: 1,
+        updatedAt: new Date().toISOString(),
+        chart: cloneConfig(chart),
     };
 };
 

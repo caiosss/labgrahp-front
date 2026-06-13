@@ -15,7 +15,7 @@ export const TableColumnsSection = ({
     removeColumn,
 }: TableColumnsSectionProps) => {
     return (
-        <div className="space-y-3">
+        <div data-tour="table-columns" className="space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <h2 className="font-semibold text-slate-900">Colunas</h2>
 

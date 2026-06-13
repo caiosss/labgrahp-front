@@ -1,5 +1,6 @@
 import createPlotlyComponent from "react-plotly.js/factory";
 import Plotly from "plotly.js-dist-min";
+import type { Data } from "plotly.js";
 import type { ChartConfig } from "../../types/chart";
 
 const resolveDefaultExport = <T,>(module: T | { default: T }): T =>
@@ -38,15 +39,36 @@ export const ChartPreview = ({ chart }: ChartPreviewProps) => {
         chart.yAxis.tickMode === "custom"
             ? parseTickValues(chart.yAxis.tickValues)
             : undefined;
+    const toNumberOrNull = (value: string) => {
+        if (value.trim() === "") {
+            return null;
+        }
 
-    return (
-        <Plot
-            data={chart.series.map((serie) => ({
-                x: serie.points.map((point) => Number(point.x)),
-                y: serie.points.map((point) => Number(point.y)),
-                type: "scatter",
+        const parsedValue = Number(value);
+
+        return Number.isNaN(parsedValue) ? null : parsedValue;
+    };
+    const plotSeries: Data[] = chart.series
+        .map((serie): Data | null => {
+            const validPoints = serie.points
+                .map((point) => ({
+                    x: toNumberOrNull(point.x),
+                    y: toNumberOrNull(point.y),
+                }))
+                .filter((point): point is { x: number; y: number } =>
+                    point.x !== null && point.y !== null,
+                );
+
+            if (validPoints.length === 0) {
+                return null;
+            }
+
+            return {
+                x: validPoints.map((point) => point.x),
+                y: validPoints.map((point) => point.y),
+                type: "scatter" as const,
                 mode: chart.mode,
-                name: serie.name,
+                name: serie.name || "Serie sem nome",
                 marker: {
                     color: serie.color,
                     size: Number(serie.markerSize) || 8,
@@ -58,7 +80,34 @@ export const ChartPreview = ({ chart }: ChartPreviewProps) => {
                     dash: serie.lineDash,
                     shape: serie.lineShape,
                 },
-            }))}
+            };
+        })
+        .filter((serie): serie is Data => serie !== null);
+
+    if (plotSeries.length === 0) {
+        return (
+            <div
+                className="flex min-h-[360px] items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50 p-6 text-center"
+                style={{
+                    height: `${Number(chart.appearance.height) || 560}px`,
+                    maxHeight: "70vh",
+                }}
+            >
+                <div>
+                    <p className="font-medium text-slate-700">
+                        Nenhum ponto valido para visualizar
+                    </p>
+                    <p className="mt-1 text-sm text-slate-500">
+                        Preencha pelo menos um par X/Y na serie manual ou gere uma curva de pico.
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <Plot
+            data={plotSeries}
             layout={{
                 autosize: true,
                 title: {

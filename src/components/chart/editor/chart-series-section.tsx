@@ -309,9 +309,14 @@ export const ChartSeriesSection = ({
     updateGaussianPeak,
 }: ChartSeriesSectionProps) => {
     return (
-        <div className="space-y-4">
+        <div data-tour="chart-series" className="space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2 className="font-semibold text-slate-900">Series</h2>
+                <div>
+                    <h2 className="font-semibold text-slate-900">Dados</h2>
+                    <p className="text-sm text-slate-500">
+                        Cada serie vira uma linha, conjunto de pontos ou curva no gráfico.
+                    </p>
+                </div>
 
                 <div className="flex flex-wrap items-center gap-2">
                     <button

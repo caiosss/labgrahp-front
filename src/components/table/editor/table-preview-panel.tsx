@@ -15,7 +15,10 @@ export const TablePreviewPanel = ({
     onExportPNG,
 }: TablePreviewPanelProps) => {
     return (
-        <section className="min-w-0 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:rounded-2xl sm:p-5">
+        <section
+            data-tour="table-preview"
+            className="min-w-0 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:rounded-2xl sm:p-5"
+        >
             <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h2 className="font-semibold text-slate-900">Preview</h2>

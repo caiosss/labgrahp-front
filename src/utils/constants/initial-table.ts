@@ -18,7 +18,7 @@ export const initialTable: AbntTableConfig = {
     columns: [
         { id: sampleColumnId, label: "Amostra" },
         { id: absorbanceColumnId, label: "Absorbancia" },
-        { id: concentrationColumnId, label: "Concentracao" },
+        { id: concentrationColumnId, label: "Concentração" },
     ],
     rows: [
         {

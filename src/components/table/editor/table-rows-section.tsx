@@ -15,7 +15,7 @@ export const TableRowsSection = ({
     updateCell,
 }: TableRowsSectionProps) => {
     return (
-        <div className="space-y-3">
+        <div data-tour="table-rows" className="space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <h2 className="font-semibold text-slate-900">Linhas</h2>
 

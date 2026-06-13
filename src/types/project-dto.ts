@@ -23,3 +23,12 @@ export interface TableProjectDto extends BaseProjectDto {
 }
 
 export type ProjectDto = ChartProjectDto | TableProjectDto;
+
+export interface ChartDraftDto {
+    id: string;
+    type: "chart-draft";
+    projectId?: string;
+    schemaVersion: 1;
+    updatedAt: string;
+    chart: ChartConfig;
+}
