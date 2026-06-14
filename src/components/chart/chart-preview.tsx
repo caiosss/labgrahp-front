@@ -74,6 +74,7 @@ export const ChartPreview = ({ chart }: ChartPreviewProps) => {
                 mode: chart.mode,
                 name: serie.name || "Serie sem nome",
                 legendgroup: serie.id,
+                cliponaxis: false,
                 marker: {
                     color: serie.color,
                     size: Number(serie.markerSize) || 8,
@@ -162,6 +163,7 @@ export const ChartPreview = ({ chart }: ChartPreviewProps) => {
                         text: xTitle || "Eixo X",
                     },
                     showgrid: chart.showGrid,
+                    zeroline: false,
                     range:
                         chart.xAxis.min !== "" && chart.xAxis.max !== ""
                             ? [Number(chart.xAxis.min), Number(chart.xAxis.max)]
@@ -178,6 +180,7 @@ export const ChartPreview = ({ chart }: ChartPreviewProps) => {
                         text: yTitle || "Eixo Y",
                     },
                     showgrid: chart.showGrid,
+                    zeroline: false,
                     range:
                         chart.yAxis.min !== "" && chart.yAxis.max !== ""
                             ? [Number(chart.yAxis.min), Number(chart.yAxis.max)]
