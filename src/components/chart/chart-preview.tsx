@@ -39,6 +39,30 @@ const getValidPoints = (points: DataPoint[]) => {
         );
 };
 
+const shouldBreakLineAtPoint = (point: { x: number; y: number }) =>
+    point.x === 0 || point.y === 0;
+
+const buildLinePoints = (points: Array<{ x: number; y: number }>) => {
+    const x: Array<number | null> = [];
+    const y: Array<number | null> = [];
+
+    points.forEach((point) => {
+        if (shouldBreakLineAtPoint(point)) {
+            if (x.length > 0 && x[x.length - 1] !== null) {
+                x.push(null);
+                y.push(null);
+            }
+
+            return;
+        }
+
+        x.push(point.x);
+        y.push(point.y);
+    });
+
+    return { x, y };
+};
+
 const parseAxisLimit = (value: string) => {
     if (value.trim() === "") {
         return null;
@@ -115,14 +139,27 @@ export const ChartPreview = ({ chart }: ChartPreviewProps) => {
     const plotSeries: Data[] = chart.series
         .flatMap((serie): Data[] => {
             const validPoints = getValidPoints(serie.points);
+            const lineBreakPoints = validPoints.filter(shouldBreakLineAtPoint);
+            const regressionPoints = validPoints.filter(
+                (point) => !shouldBreakLineAtPoint(point),
+            );
+            const linePoints = buildLinePoints(validPoints);
 
             if (validPoints.length === 0) {
                 return [];
             }
 
+            const shouldShowMarkers = chart.mode.includes("markers");
+            const seriesTraces: Data[] = [];
             const originalTrace: Data = {
-                x: validPoints.map((point) => point.x),
-                y: validPoints.map((point) => point.y),
+                x:
+                    chart.mode === "markers"
+                        ? validPoints.map((point) => point.x)
+                        : linePoints.x,
+                y:
+                    chart.mode === "markers"
+                        ? validPoints.map((point) => point.y)
+                        : linePoints.y,
                 type: "scatter" as const,
                 mode: chart.mode,
                 name: serie.name || "Serie sem nome",
@@ -141,14 +178,34 @@ export const ChartPreview = ({ chart }: ChartPreviewProps) => {
                 },
             };
 
-            if (!serie.linearFit?.enabled) {
-                return [originalTrace];
+            seriesTraces.push(originalTrace);
+
+            if (shouldShowMarkers && lineBreakPoints.length > 0) {
+                seriesTraces.push({
+                    x: lineBreakPoints.map((point) => point.x),
+                    y: lineBreakPoints.map((point) => point.y),
+                    type: "scatter" as const,
+                    mode: "markers" as const,
+                    name: serie.name || "Serie sem nome",
+                    legendgroup: serie.id,
+                    showlegend: false,
+                    cliponaxis: false,
+                    marker: {
+                        color: serie.color,
+                        size: Number(serie.markerSize) || 8,
+                        symbol: serie.markerSymbol,
+                    },
+                });
             }
 
-            const regression = calculateLinearRegression(validPoints);
+            if (!serie.linearFit?.enabled) {
+                return seriesTraces;
+            }
+
+            const regression = calculateLinearRegression(regressionPoints);
 
             if (!regression) {
-                return [originalTrace];
+                return seriesTraces;
             }
 
             const equation = formatLinearRegressionEquation(regression);
@@ -170,7 +227,7 @@ export const ChartPreview = ({ chart }: ChartPreviewProps) => {
                 },
             };
 
-            return [originalTrace, linearFitTrace];
+            return [...seriesTraces, linearFitTrace];
         });
 
     if (plotSeries.length === 0) {
