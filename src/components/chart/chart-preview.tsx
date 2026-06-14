@@ -1,7 +1,7 @@
 import createPlotlyComponent from "react-plotly.js/factory";
 import Plotly from "plotly.js-dist-min";
 import type { Data } from "plotly.js";
-import type { ChartConfig } from "../../types/chart";
+import type { ChartAxisConfig, ChartConfig, DataPoint } from "../../types/chart";
 import {
     calculateLinearRegression,
     formatLinearRegressionEquation,
@@ -18,6 +18,63 @@ interface ChartPreviewProps {
     chart: ChartConfig;
 }
 
+const toNumberOrNull = (value: string) => {
+    if (value.trim() === "") {
+        return null;
+    }
+
+    const parsedValue = Number(value);
+
+    return Number.isNaN(parsedValue) ? null : parsedValue;
+};
+
+const getValidPoints = (points: DataPoint[]) => {
+    return points
+        .map((point) => ({
+            x: toNumberOrNull(point.x),
+            y: toNumberOrNull(point.y),
+        }))
+        .filter((point): point is { x: number; y: number } =>
+            point.x !== null && point.y !== null,
+        );
+};
+
+const parseAxisLimit = (value: string) => {
+    if (value.trim() === "") {
+        return null;
+    }
+
+    const parsedValue = Number(value);
+
+    return Number.isFinite(parsedValue) ? parsedValue : null;
+};
+
+const resolveAxisRange = (
+    axis: ChartAxisConfig,
+    values: number[],
+): [number, number] | undefined => {
+    const configuredMin = parseAxisLimit(axis.min);
+    const configuredMax = parseAxisLimit(axis.max);
+
+    if (
+        configuredMin === null ||
+        configuredMax === null ||
+        configuredMin >= configuredMax
+    ) {
+        return undefined;
+    }
+
+    const axisSpan = configuredMax - configuredMin;
+    const padding = axisSpan > 0 ? axisSpan * 0.04 : 1;
+    const hasValueAtMin = values.some((value) => value <= configuredMin);
+    const hasValueAtMax = values.some((value) => value >= configuredMax);
+
+    return [
+        hasValueAtMin ? configuredMin - padding : configuredMin,
+        hasValueAtMax ? configuredMax + padding : configuredMax,
+    ];
+};
+
 export const ChartPreview = ({ chart }: ChartPreviewProps) => {
     const xTitle = chart.xAxis.unit
         ? `${chart.xAxis.label} (${chart.xAxis.unit})`
@@ -32,7 +89,7 @@ export const ChartPreview = ({ chart }: ChartPreviewProps) => {
             .split(",")
             .map((item) => Number(item.trim()))
             .filter((item) => !Number.isNaN(item));
-    }
+    };
 
     const xTickValues =
         chart.xAxis.tickMode === "custom"
@@ -43,25 +100,21 @@ export const ChartPreview = ({ chart }: ChartPreviewProps) => {
         chart.yAxis.tickMode === "custom"
             ? parseTickValues(chart.yAxis.tickValues)
             : undefined;
-    const toNumberOrNull = (value: string) => {
-        if (value.trim() === "") {
-            return null;
-        }
+    const allValidPoints = chart.series.flatMap((serie) =>
+        getValidPoints(serie.points),
+    );
+    const xRange = resolveAxisRange(
+        chart.xAxis,
+        allValidPoints.map((point) => point.x),
+    );
+    const yRange = resolveAxisRange(
+        chart.yAxis,
+        allValidPoints.map((point) => point.y),
+    );
 
-        const parsedValue = Number(value);
-
-        return Number.isNaN(parsedValue) ? null : parsedValue;
-    };
     const plotSeries: Data[] = chart.series
         .flatMap((serie): Data[] => {
-            const validPoints = serie.points
-                .map((point) => ({
-                    x: toNumberOrNull(point.x),
-                    y: toNumberOrNull(point.y),
-                }))
-                .filter((point): point is { x: number; y: number } =>
-                    point.x !== null && point.y !== null,
-                );
+            const validPoints = getValidPoints(serie.points);
 
             if (validPoints.length === 0) {
                 return [];
@@ -164,10 +217,7 @@ export const ChartPreview = ({ chart }: ChartPreviewProps) => {
                     },
                     showgrid: chart.showGrid,
                     zeroline: false,
-                    range:
-                        chart.xAxis.min !== "" && chart.xAxis.max !== ""
-                            ? [Number(chart.xAxis.min), Number(chart.xAxis.max)]
-                            : undefined,
+                    range: xRange,
                     tickmode: chart.xAxis.tickMode === "custom" ? "array" : "linear",
                     tickvals: xTickValues,
                     dtick:
@@ -181,10 +231,7 @@ export const ChartPreview = ({ chart }: ChartPreviewProps) => {
                     },
                     showgrid: chart.showGrid,
                     zeroline: false,
-                    range:
-                        chart.yAxis.min !== "" && chart.yAxis.max !== ""
-                            ? [Number(chart.yAxis.min), Number(chart.yAxis.max)]
-                            : undefined,
+                    range: yRange,
                     tickmode: chart.yAxis.tickMode === "custom" ? "array" : "linear",
                     tickvals: yTickValues,
                     dtick:
