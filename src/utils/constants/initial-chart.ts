@@ -1,5 +1,13 @@
-import type { ChartConfig } from "../../types/chart";
+import type { ChartConfig, LinearFitConfig } from "../../types/chart";
 import { createRandomUUID } from "../create-random-uuid";
+
+export const initialLinearFit: LinearFitConfig = {
+    enabled: false,
+    color: "#f97316",
+    lineWidth: "2",
+    lineDash: "dash",
+    showEquation: true,
+};
 
 export const initialChart: ChartConfig = {
     title: "Gráfico 1: Absorbância em função do tempo",
@@ -43,6 +51,7 @@ export const initialChart: ChartConfig = {
             lineWidth: "2",
             lineDash: "solid",
             lineShape: "linear",
+            linearFit: { ...initialLinearFit },
             points: [
                 { id: createRandomUUID(), x: "0", y: "0.82" },
                 { id: createRandomUUID(), x: "10", y: "0.69" },

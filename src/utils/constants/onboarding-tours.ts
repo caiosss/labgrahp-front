@@ -43,9 +43,9 @@ export const chartEditorTourSteps: OnboardingStep[] = [
         target: "chart-series",
         title: "Dados e séries",
         description:
-            "Cada série representa um conjunto de pontos ou uma curva. O preview é atualizado conforme você edita.",
+            "Cada série representa um conjunto de pontos ou uma curva. Você também pode ativar um ajuste linear independente por série.",
         example:
-            "  use Série manual para pontos X/Y e Curva de pico para gerar uma curva gaussiana.",
+            "  use Série manual para pontos X/Y, Curva de pico para gerar uma curva gaussiana e Ajuste linear para exibir a reta de regressão.",
     },
     {
         target: "chart-preview",

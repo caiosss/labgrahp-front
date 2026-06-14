@@ -2,6 +2,10 @@ import createPlotlyComponent from "react-plotly.js/factory";
 import Plotly from "plotly.js-dist-min";
 import type { Data } from "plotly.js";
 import type { ChartConfig } from "../../types/chart";
+import {
+    calculateLinearRegression,
+    formatLinearRegressionEquation,
+} from "../../utils/regression";
 
 const resolveDefaultExport = <T,>(module: T | { default: T }): T =>
     "default" in Object(module) ? (module as { default: T }).default : (module as T);
@@ -49,7 +53,7 @@ export const ChartPreview = ({ chart }: ChartPreviewProps) => {
         return Number.isNaN(parsedValue) ? null : parsedValue;
     };
     const plotSeries: Data[] = chart.series
-        .map((serie): Data | null => {
+        .flatMap((serie): Data[] => {
             const validPoints = serie.points
                 .map((point) => ({
                     x: toNumberOrNull(point.x),
@@ -60,15 +64,16 @@ export const ChartPreview = ({ chart }: ChartPreviewProps) => {
                 );
 
             if (validPoints.length === 0) {
-                return null;
+                return [];
             }
 
-            return {
+            const originalTrace: Data = {
                 x: validPoints.map((point) => point.x),
                 y: validPoints.map((point) => point.y),
                 type: "scatter" as const,
                 mode: chart.mode,
                 name: serie.name || "Serie sem nome",
+                legendgroup: serie.id,
                 marker: {
                     color: serie.color,
                     size: Number(serie.markerSize) || 8,
@@ -81,8 +86,38 @@ export const ChartPreview = ({ chart }: ChartPreviewProps) => {
                     shape: serie.lineShape,
                 },
             };
-        })
-        .filter((serie): serie is Data => serie !== null);
+
+            if (!serie.linearFit?.enabled) {
+                return [originalTrace];
+            }
+
+            const regression = calculateLinearRegression(validPoints);
+
+            if (!regression) {
+                return [originalTrace];
+            }
+
+            const equation = formatLinearRegressionEquation(regression);
+            const linearFitTrace: Data = {
+                x: regression.x,
+                y: regression.y,
+                type: "scatter" as const,
+                mode: "lines" as const,
+                name: `Ajuste linear - ${serie.name || "Serie sem nome"}`,
+                legendgroup: serie.id,
+                hovertemplate: serie.linearFit.showEquation
+                    ? `${equation}<extra></extra>`
+                    : undefined,
+                line: {
+                    color: serie.linearFit.color || serie.color,
+                    width: Number(serie.linearFit.lineWidth) || 2,
+                    dash: serie.linearFit.lineDash,
+                    shape: "linear",
+                },
+            };
+
+            return [originalTrace, linearFitTrace];
+        });
 
     if (plotSeries.length === 0) {
         return (

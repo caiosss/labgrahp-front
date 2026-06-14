@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { ChartAxisConfig, ChartConfig, ChartSeries, DataPoint } from "../types/chart";
 import { useProjectStore } from "../store/project-store";
-import { initialChart } from "../utils/constants/initial-chart";
+import { initialChart, initialLinearFit } from "../utils/constants/initial-chart";
 import { createRandomUUID } from "../utils/create-random-uuid";
 import { generateGaussianPeak } from "../utils/generate-gaussian-peak";
 import { cloneProjectConfig, createChartProjectDto } from "../utils/project-dto";
@@ -75,7 +75,7 @@ export const useChartEditor = (projectId?: string) => {
     const updateSeries = (
         seriesId: string,
         key: keyof ChartSeries,
-        value: string,
+        value: ChartSeries[keyof ChartSeries],
     ) => {
         setChart((current) => ({
             ...current,
@@ -101,6 +101,7 @@ export const useChartEditor = (projectId?: string) => {
             lineWidth: "2",
             lineDash: "solid",
             lineShape: "linear",
+            linearFit: { ...initialLinearFit },
             points: [
                 { id: createRandomUUID(), x: "0", y: "0" },
                 { id: createRandomUUID(), x: "1", y: "1" },
@@ -214,6 +215,7 @@ export const useChartEditor = (projectId?: string) => {
             lineWidth: "2",
             lineDash: "solid",
             lineShape: "spline",
+            linearFit: { ...initialLinearFit },
             gaussianPeak,
             points: generateGaussianPeak(gaussianPeak),
         };

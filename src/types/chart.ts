@@ -21,6 +21,14 @@ export type LineShape = "linear" | "spline";
 
 export type SeriesType = "manual" | "gaussian-peak";
 
+export interface LinearFitConfig {
+    enabled: boolean;
+    color: string;
+    lineWidth: string;
+    lineDash: LineDash;
+    showEquation: boolean;
+}
+
 export interface DataPoint {
     id: string;
     x: string;
@@ -38,22 +46,23 @@ export interface ChartAxisConfig {
 }
 
 export interface ChartSeries {
-  id: string;
-  type: SeriesType;
+    id: string;
+    type: SeriesType;
 
-  name: string;
-  color: string;
+    name: string;
+    color: string;
 
-  markerSize: string;
-  markerSymbol: MarkerSymbol;
+    markerSize: string;
+    markerSymbol: MarkerSymbol;
 
-  lineWidth: string;
-  lineDash: LineDash;
-  lineShape: LineShape;
+    lineWidth: string;
+    lineDash: LineDash;
+    lineShape: LineShape;
 
-  points: DataPoint[];
+    points: DataPoint[];
 
-  gaussianPeak?: GaussianPeakConfig;
+    gaussianPeak?: GaussianPeakConfig;
+    linearFit?: LinearFitConfig;
 }
 
 export interface ChartConfig {
@@ -77,11 +86,11 @@ export interface ChartAppearance {
 }
 
 export interface GaussianPeakConfig {
-  xMin: string;
-  xMax: string;
-  peakX: string;
-  amplitude: string;
-  width: string;
-  baseline: string;
-  step: string;
+    xMin: string;
+    xMax: string;
+    peakX: string;
+    amplitude: string;
+    width: string;
+    baseline: string;
+    step: string;
 }

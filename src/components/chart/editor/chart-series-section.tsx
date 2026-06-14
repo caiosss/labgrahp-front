@@ -1,9 +1,19 @@
 import { Plus, Trash2 } from "lucide-react";
-import type { ChartConfig, ChartSeries, DataPoint } from "../../../types/chart";
+import type {
+    ChartConfig,
+    ChartSeries,
+    DataPoint,
+    LinearFitConfig,
+} from "../../../types/chart";
+import { initialLinearFit } from "../../../utils/constants/initial-chart";
 
 interface ChartSeriesSectionProps {
     chart: ChartConfig;
-    updateSeries: (seriesId: string, key: keyof ChartSeries, value: string) => void;
+    updateSeries: (
+        seriesId: string,
+        key: keyof ChartSeries,
+        value: ChartSeries[keyof ChartSeries],
+    ) => void;
     addSeries: () => void;
     removeSeries: (seriesId: string) => void;
     addPoint: (seriesId: string) => void;
@@ -121,6 +131,122 @@ const SeriesStyleFields = ({
                     <option value="dashdot">Traco-ponto</option>
                 </select>
             </div>
+        </div>
+    );
+};
+
+const LinearFitFields = ({
+    serie,
+    updateSeries,
+}: Pick<ChartSeriesCardProps, "serie" | "updateSeries">) => {
+    const linearFit = serie.linearFit ?? initialLinearFit;
+    const updateLinearFit = <K extends keyof LinearFitConfig>(
+        key: K,
+        value: LinearFitConfig[K],
+    ) => {
+        updateSeries(serie.id, "linearFit", {
+            ...linearFit,
+            [key]: value,
+        });
+    };
+
+    return (
+        <div className="mb-4 rounded-xl border border-blue-100 bg-blue-50/60 p-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                    <h4 className="text-sm font-semibold text-blue-950">
+                        Ajuste linear
+                    </h4>
+                    <p className="mt-1 text-xs leading-5 text-blue-800">
+                        Gera uma reta y = mx + b usando apenas os pontos válidos desta série.
+                    </p>
+                </div>
+
+                <label className="inline-flex items-center gap-2 text-sm font-medium text-blue-950">
+                    <input
+                        type="checkbox"
+                        checked={linearFit.enabled}
+                        onChange={(event) =>
+                            updateLinearFit("enabled", event.target.checked)
+                        }
+                    />
+                    Ativar
+                </label>
+            </div>
+
+            {linearFit.enabled && (
+                <div className="mt-3 space-y-3">
+                    <p className="text-xs text-blue-700">
+                        A reta aparece quando houver pelo menos dois pontos X/Y válidos com valores de X diferentes.
+                    </p>
+
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                        <div className="space-y-2">
+                            <label className="text-xs font-medium text-slate-700">
+                                Cor da reta
+                            </label>
+
+                            <input
+                                type="color"
+                                value={linearFit.color}
+                                onChange={(event) =>
+                                    updateLinearFit("color", event.target.value)
+                                }
+                                className="h-10 w-full rounded-lg border border-slate-300"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-xs font-medium text-slate-700">
+                                Espessura
+                            </label>
+
+                            <input
+                                type="number"
+                                min="1"
+                                value={linearFit.lineWidth}
+                                onChange={(event) =>
+                                    updateLinearFit("lineWidth", event.target.value)
+                                }
+                                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-xs font-medium text-slate-700">
+                                Tipo da reta
+                            </label>
+
+                            <select
+                                value={linearFit.lineDash}
+                                onChange={(event) =>
+                                    updateLinearFit(
+                                        "lineDash",
+                                        event.target.value as LinearFitConfig["lineDash"],
+                                    )
+                                }
+                                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500"
+                            >
+                                <option value="solid">Contínua</option>
+                                <option value="dash">Tracejada</option>
+                                <option value="dot">Pontilhada</option>
+                                <option value="dashdot">Traço-ponto</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+                        <input
+                            type="checkbox"
+                            checked={linearFit.showEquation}
+                            onChange={(event) =>
+                                updateLinearFit("showEquation", event.target.checked)
+                            }
+                        />
+                        Mostrar equação no hover
+                    </label>
+                </div>
+            )}
         </div>
     );
 };
@@ -281,6 +407,8 @@ const ChartSeriesCard = ({
             </div>
 
             <SeriesStyleFields serie={serie} updateSeries={updateSeries} />
+
+            <LinearFitFields serie={serie} updateSeries={updateSeries} />
 
             <GaussianPeakFields
                 serie={serie}
