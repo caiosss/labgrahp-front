@@ -35,7 +35,7 @@ export const chartEditorTourSteps: OnboardingStep[] = [
         target: "chart-appearance",
         title: "Visual e exportação",
         description:
-            "Ajuste tipo de visualização, grade, legenda, fonte e tamanho final antes de baixar a imagem.",
+            "Ajuste tipo de visualização, grade, legenda, fontes e tamanho final antes de exportar.",
         example:
             "  linha com pontos é útil para séries experimentais com poucos pontos.",
     },
@@ -51,9 +51,9 @@ export const chartEditorTourSteps: OnboardingStep[] = [
         target: "chart-preview",
         title: "Preview",
         description:
-            "Confira o resultado antes de exportar. Em telas pequenas, esta área pode ser rolada horizontalmente. Aperte duas vezes para voltar ao estado inicial e confira as ferramentas acima do título do gráfico.",
+            "Confira o resultado antes de exportar. Aqui você também pode gerar equações e baixar o gráfico em PDF.",
         example:
-            "  valide título, legenda e escala antes de usar o botão de câmera do gráfico.",
+            "  valide título, legenda, escala e equações antes de exportar.",
     },
 ];
 

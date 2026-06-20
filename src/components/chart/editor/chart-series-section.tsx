@@ -174,6 +174,30 @@ const LinearFitFields = ({
                 </label>
             </div>
 
+            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+                    <input
+                        type="checkbox"
+                        checked={linearFit.showEquation}
+                        onChange={(event) =>
+                            updateLinearFit("showEquation", event.target.checked)
+                        }
+                    />
+                    Mostrar equação na legenda
+                </label>
+
+                <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+                    <input
+                        type="checkbox"
+                        checked={linearFit.showRSquared ?? true}
+                        onChange={(event) =>
+                            updateLinearFit("showRSquared", event.target.checked)
+                        }
+                    />
+                    Incluir R²
+                </label>
+            </div>
+
             {linearFit.enabled && (
                 <div className="mt-3 space-y-3">
                     <p className="text-xs text-blue-700">
@@ -235,16 +259,9 @@ const LinearFitFields = ({
                         </div>
                     </div>
 
-                    <label className="inline-flex items-center gap-2 text-sm text-slate-700">
-                        <input
-                            type="checkbox"
-                            checked={linearFit.showEquation}
-                            onChange={(event) =>
-                                updateLinearFit("showEquation", event.target.checked)
-                            }
-                        />
-                        Mostrar equação no hover
-                    </label>
+                    <p className="text-xs text-slate-600">
+                        Quando a equação está ativa, ela também aparece no hover da reta. O R² é opcional e costuma ser usado para avaliar regressões lineares.
+                    </p>
                 </div>
             )}
         </div>

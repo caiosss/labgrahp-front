@@ -61,8 +61,13 @@ export const formatLinearRegressionEquation = ({
     intercept,
     rSquared: coefficientOfDetermination,
     slope,
-}: LinearRegressionResult) => {
+}: LinearRegressionResult, options?: { includeRSquared?: boolean }) => {
     const interceptSign = intercept >= 0 ? "+" : "-";
+    const equation = `y = ${roundDisplayNumber(slope)}x ${interceptSign} ${roundDisplayNumber(Math.abs(intercept))}`;
 
-    return `y = ${roundDisplayNumber(slope)}x ${interceptSign} ${roundDisplayNumber(Math.abs(intercept))} | R² = ${roundDisplayNumber(coefficientOfDetermination)}`;
+    if (options?.includeRSquared === false) {
+        return equation;
+    }
+
+    return `${equation} | R² = ${roundDisplayNumber(coefficientOfDetermination)}`;
 };

@@ -1,7 +1,13 @@
 import createPlotlyComponent from "react-plotly.js/factory";
 import Plotly from "plotly.js-dist-min";
 import type { Data } from "plotly.js";
-import type { ChartAxisConfig, ChartConfig, DataPoint } from "../../types/chart";
+import type { ChartConfig } from "../../types/chart";
+import {
+    buildLinePoints,
+    getValidPoints,
+    resolveAxisRange,
+    shouldBreakLineAtPoint,
+} from "../../utils/chart/chart-data";
 import {
     calculateLinearRegression,
     formatLinearRegressionEquation,
@@ -16,90 +22,10 @@ const Plot = resolveDefaultExport(createPlotlyComponent)(
 
 interface ChartPreviewProps {
     chart: ChartConfig;
+    onReady?: (chartElement: HTMLElement) => void;
 }
 
-const toNumberOrNull = (value: string) => {
-    if (value.trim() === "") {
-        return null;
-    }
-
-    const parsedValue = Number(value);
-
-    return Number.isNaN(parsedValue) ? null : parsedValue;
-};
-
-const getValidPoints = (points: DataPoint[]) => {
-    return points
-        .map((point) => ({
-            x: toNumberOrNull(point.x),
-            y: toNumberOrNull(point.y),
-        }))
-        .filter((point): point is { x: number; y: number } =>
-            point.x !== null && point.y !== null,
-        );
-};
-
-const shouldBreakLineAtPoint = (point: { x: number; y: number }) =>
-    point.x === 0 || point.y === 0;
-
-const buildLinePoints = (points: Array<{ x: number; y: number }>) => {
-    const x: Array<number | null> = [];
-    const y: Array<number | null> = [];
-
-    points.forEach((point) => {
-        if (shouldBreakLineAtPoint(point)) {
-            if (x.length > 0 && x[x.length - 1] !== null) {
-                x.push(null);
-                y.push(null);
-            }
-
-            return;
-        }
-
-        x.push(point.x);
-        y.push(point.y);
-    });
-
-    return { x, y };
-};
-
-const parseAxisLimit = (value: string) => {
-    if (value.trim() === "") {
-        return null;
-    }
-
-    const parsedValue = Number(value);
-
-    return Number.isFinite(parsedValue) ? parsedValue : null;
-};
-
-const resolveAxisRange = (
-    axis: ChartAxisConfig,
-    values: number[],
-): [number, number] | undefined => {
-    const configuredMin = parseAxisLimit(axis.min);
-    const configuredMax = parseAxisLimit(axis.max);
-
-    if (
-        configuredMin === null ||
-        configuredMax === null ||
-        configuredMin >= configuredMax
-    ) {
-        return undefined;
-    }
-
-    const axisSpan = configuredMax - configuredMin;
-    const padding = axisSpan > 0 ? axisSpan * 0.04 : 1;
-    const hasValueAtMin = values.some((value) => value <= configuredMin);
-    const hasValueAtMax = values.some((value) => value >= configuredMax);
-
-    return [
-        hasValueAtMin ? configuredMin - padding : configuredMin,
-        hasValueAtMax ? configuredMax + padding : configuredMax,
-    ];
-};
-
-export const ChartPreview = ({ chart }: ChartPreviewProps) => {
+export const ChartPreview = ({ chart, onReady }: ChartPreviewProps) => {
     const xTitle = chart.xAxis.unit
         ? `${chart.xAxis.label} (${chart.xAxis.unit})`
         : chart.xAxis.label;
@@ -124,6 +50,10 @@ export const ChartPreview = ({ chart }: ChartPreviewProps) => {
         chart.yAxis.tickMode === "custom"
             ? parseTickValues(chart.yAxis.tickValues)
             : undefined;
+    const titleFontSize = Number(chart.appearance.titleFontSize) || 18;
+    const axisTitleFontSize = Number(chart.appearance.axisTitleFontSize) || 14;
+    const tickFontSize = Number(chart.appearance.tickFontSize) || 12;
+    const legendFontSize = Number(chart.appearance.legendFontSize) || 12;
     const allValidPoints = chart.series.flatMap((serie) =>
         getValidPoints(serie.points),
     );
@@ -149,7 +79,14 @@ export const ChartPreview = ({ chart }: ChartPreviewProps) => {
                 return [];
             }
 
+            const seriesName = serie.name || "Serie sem nome";
             const shouldShowMarkers = chart.mode.includes("markers");
+            const regression = calculateLinearRegression(regressionPoints);
+            const includeRSquared = serie.linearFit?.showRSquared ?? true;
+            const equation = regression
+                ? formatLinearRegressionEquation(regression, { includeRSquared })
+                : undefined;
+            const shouldShowEquation = (serie.linearFit?.showEquation ?? true) && equation;
             const seriesTraces: Data[] = [];
             const originalTrace: Data = {
                 x:
@@ -162,7 +99,7 @@ export const ChartPreview = ({ chart }: ChartPreviewProps) => {
                         : linePoints.y,
                 type: "scatter" as const,
                 mode: chart.mode,
-                name: serie.name || "Serie sem nome",
+                name: shouldShowEquation ? `${seriesName}: ${equation}` : seriesName,
                 legendgroup: serie.id,
                 cliponaxis: false,
                 marker: {
@@ -186,7 +123,7 @@ export const ChartPreview = ({ chart }: ChartPreviewProps) => {
                     y: lineBreakPoints.map((point) => point.y),
                     type: "scatter" as const,
                     mode: "markers" as const,
-                    name: serie.name || "Serie sem nome",
+                    name: seriesName,
                     legendgroup: serie.id,
                     showlegend: false,
                     cliponaxis: false,
@@ -202,19 +139,17 @@ export const ChartPreview = ({ chart }: ChartPreviewProps) => {
                 return seriesTraces;
             }
 
-            const regression = calculateLinearRegression(regressionPoints);
-
             if (!regression) {
                 return seriesTraces;
             }
 
-            const equation = formatLinearRegressionEquation(regression);
+            const linearFitName = `Ajuste linear - ${seriesName}`;
             const linearFitTrace: Data = {
                 x: regression.x,
                 y: regression.y,
                 type: "scatter" as const,
                 mode: "lines" as const,
-                name: `Ajuste linear - ${serie.name || "Serie sem nome"}`,
+                name: linearFitName,
                 legendgroup: serie.id,
                 hovertemplate: serie.linearFit.showEquation
                     ? `${equation}<extra></extra>`
@@ -259,18 +194,25 @@ export const ChartPreview = ({ chart }: ChartPreviewProps) => {
                 title: {
                     text: chart.title || "Título do gráfico",
                     font: {
-                        size: Number(chart.appearance.titleFontSize) || 16,
+                        size: titleFontSize,
                         family: chart.appearance.fontFamily,
                     },
                 },
                 font: {
                     family: chart.appearance.fontFamily,
+                    size: tickFontSize,
                 },
                 plot_bgcolor: chart.appearance.plotBackgroundColor,
                 paper_bgcolor: chart.appearance.paperBackgroundColor,
                 xaxis: {
                     title: {
                         text: xTitle || "Eixo X",
+                        font: {
+                            size: axisTitleFontSize,
+                        },
+                    },
+                    tickfont: {
+                        size: tickFontSize,
                     },
                     showgrid: chart.showGrid,
                     zeroline: false,
@@ -285,6 +227,12 @@ export const ChartPreview = ({ chart }: ChartPreviewProps) => {
                 yaxis: {
                     title: {
                         text: yTitle || "Eixo Y",
+                        font: {
+                            size: axisTitleFontSize,
+                        },
+                    },
+                    tickfont: {
+                        size: tickFontSize,
                     },
                     showgrid: chart.showGrid,
                     zeroline: false,
@@ -297,6 +245,11 @@ export const ChartPreview = ({ chart }: ChartPreviewProps) => {
                             : undefined,
                 },
                 showlegend: chart.showLegend,
+                legend: {
+                    font: {
+                        size: legendFontSize,
+                    },
+                },
                 margin: {
                     l: 64,
                     r: 24,
@@ -315,6 +268,12 @@ export const ChartPreview = ({ chart }: ChartPreviewProps) => {
                     scale: 2,
                 },
             }}
+            onInitialized={(_, graphElement) =>
+                onReady?.(graphElement as unknown as HTMLElement)
+            }
+            onUpdate={(_, graphElement) =>
+                onReady?.(graphElement as unknown as HTMLElement)
+            }
             useResizeHandler
             style={{
                 width: "100%",

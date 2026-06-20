@@ -107,6 +107,54 @@ export const ChartAppearanceSection = ({
                         className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500"
                     />
                 </div>
+
+                <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700">
+                        Tamanho dos eixos
+                    </label>
+
+                    <input
+                        type="number"
+                        min="8"
+                        value={chart.appearance.axisTitleFontSize ?? "14"}
+                        onChange={(event) =>
+                            updateAppearance("axisTitleFontSize", event.target.value)
+                        }
+                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500"
+                    />
+                </div>
+
+                <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700">
+                        Tamanho dos números
+                    </label>
+
+                    <input
+                        type="number"
+                        min="8"
+                        value={chart.appearance.tickFontSize ?? "12"}
+                        onChange={(event) =>
+                            updateAppearance("tickFontSize", event.target.value)
+                        }
+                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500"
+                    />
+                </div>
+
+                <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700">
+                        Tamanho da legenda
+                    </label>
+
+                    <input
+                        type="number"
+                        min="8"
+                        value={chart.appearance.legendFontSize ?? "12"}
+                        onChange={(event) =>
+                            updateAppearance("legendFontSize", event.target.value)
+                        }
+                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500"
+                    />
+                </div>
             </div>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

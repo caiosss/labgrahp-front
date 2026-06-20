@@ -27,6 +27,7 @@ export interface LinearFitConfig {
     lineWidth: string;
     lineDash: LineDash;
     showEquation: boolean;
+    showRSquared: boolean;
 }
 
 export interface DataPoint {
@@ -80,6 +81,9 @@ export interface ChartAppearance {
     width: string;
     height: string;
     titleFontSize: string;
+    axisTitleFontSize: string;
+    tickFontSize: string;
+    legendFontSize: string;
     fontFamily: string;
     plotBackgroundColor: string;
     paperBackgroundColor: string;

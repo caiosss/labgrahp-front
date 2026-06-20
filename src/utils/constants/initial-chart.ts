@@ -7,6 +7,7 @@ export const initialLinearFit: LinearFitConfig = {
     lineWidth: "2",
     lineDash: "dash",
     showEquation: true,
+    showRSquared: true,
 };
 
 export const initialChart: ChartConfig = {
@@ -36,6 +37,9 @@ export const initialChart: ChartConfig = {
         width: "900",
         height: "560",
         titleFontSize: "18",
+        axisTitleFontSize: "14",
+        tickFontSize: "12",
+        legendFontSize: "12",
         fontFamily: "Arial",
         plotBackgroundColor: "#ffffff",
         paperBackgroundColor: "#ffffff",
