@@ -1,5 +1,107 @@
 @import "tailwindcss";
 
+:root {
+  --app-bg: #f8fafc;
+  --app-card-bg: #ffffff;
+  --app-soft-bg: #f1f5f9;
+  --app-border: #e2e8f0;
+  --app-text: #0f172a;
+  --app-muted: #475569;
+}
+
+:root[data-theme="dark"] {
+  --app-bg: #020617;
+  --app-card-bg: #0f172a;
+  --app-soft-bg: #111827;
+  --app-border: #243244;
+  --app-text: #e5e7eb;
+  --app-muted: #94a3b8;
+}
+
+body {
+  background: var(--app-bg);
+}
+
+:root[data-theme="dark"] .bg-slate-50 {
+  background-color: var(--app-bg);
+}
+
+:root[data-theme="dark"] .bg-white {
+  background-color: var(--app-card-bg);
+}
+
+:root[data-theme="dark"] .bg-slate-100,
+:root[data-theme="dark"] .bg-slate-200,
+:root[data-theme="dark"] .bg-blue-50 {
+  background-color: var(--app-soft-bg);
+}
+
+:root[data-theme="dark"] .bg-blue-100 {
+  background-color: #1e3a8a;
+}
+
+:root[data-theme="dark"] .border-slate-200,
+:root[data-theme="dark"] .border-slate-300,
+:root[data-theme="dark"] .border-blue-200 {
+  border-color: var(--app-border);
+}
+
+:root[data-theme="dark"] .text-slate-900,
+:root[data-theme="dark"] .text-slate-800,
+:root[data-theme="dark"] .text-blue-950 {
+  color: var(--app-text);
+}
+
+:root[data-theme="dark"] .text-slate-700,
+:root[data-theme="dark"] .text-slate-600,
+:root[data-theme="dark"] .text-slate-500,
+:root[data-theme="dark"] .text-blue-700 {
+  color: var(--app-muted);
+}
+
+:root[data-theme="dark"] .hover\:bg-slate-50:hover,
+:root[data-theme="dark"] .hover\:bg-slate-100:hover {
+  background-color: #1e293b;
+}
+
+:root[data-theme="dark"] input,
+:root[data-theme="dark"] select,
+:root[data-theme="dark"] textarea {
+  background-color: #020617;
+  color: var(--app-text);
+  border-color: var(--app-border);
+}
+
+:root[data-theme="dark"] input[type="color"] {
+  background-color: transparent;
+}
+
+.force-light-surface,
+.force-light-surface * {
+  color-scheme: light;
+}
+
+.force-light-surface {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+.force-light-surface table,
+.force-light-surface thead,
+.force-light-surface tbody,
+.force-light-surface tfoot,
+.force-light-surface tr,
+.force-light-surface th,
+.force-light-surface td,
+.force-light-surface p {
+  background-color: transparent !important;
+  color: #000000 !important;
+}
+
+.force-light-surface .border-black {
+  border-color: #000000 !important;
+}
+
 @keyframes rainbow-border-spin {
   to {
     transform: rotate(1turn);
@@ -41,7 +143,7 @@
   z-index: -1;
   pointer-events: none;
   border-radius: inherit;
-  background: white;
+  background: var(--app-card-bg);
 }
 
 .rainbow-action-card:hover::before {

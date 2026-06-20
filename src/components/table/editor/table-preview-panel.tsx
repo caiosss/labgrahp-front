@@ -39,7 +39,7 @@ export const TablePreviewPanel = ({
             <div className="overflow-auto rounded-xl border border-slate-200 bg-slate-100 p-3 sm:p-6">
                 <div
                     ref={previewRef}
-                    className="mx-auto min-w-[560px] max-w-4xl shadow-sm sm:min-w-0"
+                    className="force-light-surface mx-auto min-w-[560px] max-w-4xl shadow-sm sm:min-w-0"
                 >
                     <AbntTablePreview table={table} />
                 </div>

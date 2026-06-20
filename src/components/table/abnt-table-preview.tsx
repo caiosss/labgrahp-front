@@ -13,7 +13,7 @@ export function AbntTablePreview({ table }: AbntTablePreviewProps) {
 
     return (
         <div
-            className="bg-white p-4 text-black sm:p-8"
+            className="force-light-surface bg-white p-4 text-black sm:p-8"
             style={{
                 fontFamily: appearance.fontFamily,
                 fontSize: `${appearance.fontSize}pt`,

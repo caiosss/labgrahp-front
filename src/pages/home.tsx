@@ -3,12 +3,14 @@ import { useProjectStore } from "../store/project-store";
 import type { ProjectDto } from "../types/project-dto";
 
 interface HomePageProps {
+    logoSrc: string;
     onCreateChart: () => void;
     onCreateTable: () => void;
     onOpenProject: (project: ProjectDto) => void;
 }
 
 export const HomePage = ({
+    logoSrc,
     onCreateChart,
     onCreateTable,
     onOpenProject,
@@ -20,15 +22,25 @@ export const HomePage = ({
     return (
         <main className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 sm:py-10">
             <div className="mx-auto max-w-6xl space-y-8 sm:space-y-10">
-                <header className="space-y-3">
-                    <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">
-                        LabGraph
-                    </h1>
+                <header className="flex flex-col gap-4 pr-12 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-4">
+                        <img
+                            alt="LabGraph"
+                            className="h-16 w-16 rounded-2xl object-cover shadow-sm ring-1 ring-slate-200 sm:h-20 sm:w-20"
+                            src={logoSrc}
+                        />
 
-                    <p className="max-w-2xl text-slate-600">
-                        Crie gráficos e tabelas acadêmicas personalizadas,
-                        com controle de dados, eixos, títulos, aparência e exportação.
-                    </p>
+                        <div className="space-y-2">
+                            <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">
+                                LabGraph
+                            </h1>
+
+                            <p className="max-w-2xl text-slate-600">
+                                Crie gráficos e tabelas acadêmicas personalizadas,
+                                com controle de dados, eixos, títulos, aparência e exportação.
+                            </p>
+                        </div>
+                    </div>
                 </header>
 
                 <section className="grid grid-cols-1 gap-6 md:grid-cols-2">

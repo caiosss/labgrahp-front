@@ -5,6 +5,8 @@ import { HomePage } from "./pages/home";
 import { TableEditorPage } from "./pages/table-editor";
 import { ChartEditorPage } from "./pages/chart-editor";
 import type { ProjectDto } from "./types/project-dto";
+import { ThemeToggle } from "./components/theme/theme-toggle";
+import { useAppTheme } from "./hooks/use-app-theme";
 
 
 
@@ -15,6 +17,7 @@ type Screen =
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>({ type: "home" });
+  const appTheme = useAppTheme();
 
   const openProject = (project: ProjectDto) => {
     setScreen({
@@ -25,27 +28,37 @@ export default function App() {
 
    if (screen.type === "chart-editor") {
     return (
-      <ChartEditorPage
-        projectId={screen.projectId}
-        onBack={() => setScreen({ type: "home" })}
-      />
+      <>
+        <ThemeToggle theme={appTheme.theme} onToggle={appTheme.toggleTheme} />
+        <ChartEditorPage
+          projectId={screen.projectId}
+          onBack={() => setScreen({ type: "home" })}
+        />
+      </>
     );
   }
 
   if (screen.type === "table-editor") {
     return (
-      <TableEditorPage
-        projectId={screen.projectId}
-        onBack={() => setScreen({ type: "home" })}
-      />
+      <>
+        <ThemeToggle theme={appTheme.theme} onToggle={appTheme.toggleTheme} />
+        <TableEditorPage
+          projectId={screen.projectId}
+          onBack={() => setScreen({ type: "home" })}
+        />
+      </>
     );
   }
 
   return (
-    <HomePage
-      onCreateChart={() => setScreen({ type: "chart-editor" })}
-      onCreateTable={() => setScreen({ type: "table-editor" })}
-      onOpenProject={openProject}
-    />
+    <>
+      <ThemeToggle theme={appTheme.theme} onToggle={appTheme.toggleTheme} />
+      <HomePage
+        logoSrc={appTheme.logoSrc}
+        onCreateChart={() => setScreen({ type: "chart-editor" })}
+        onCreateTable={() => setScreen({ type: "table-editor" })}
+        onOpenProject={openProject}
+      />
+    </>
   );
 }
