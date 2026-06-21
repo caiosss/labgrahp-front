@@ -1,16 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
-import { useProjectStore } from "../store/project-store";
+import {
+    hasSeenOnboardingTour,
+    setOnboardingTourSeen,
+} from "../services/onboarding-storage";
 import type { OnboardingStep, OnboardingTourId } from "../types/onboarding";
 
 export const useOnboardingTour = (
     tourId: OnboardingTourId,
     steps: OnboardingStep[],
 ) => {
-    const hasSeenTour = useProjectStore((state) =>
-        Boolean(state.onboarding?.seenTours?.[tourId]),
-    );
-    const setOnboardingTourSeen = useProjectStore(
-        (state) => state.setOnboardingTourSeen,
+    const [hasSeenTour, setHasSeenTour] = useState(() =>
+        hasSeenOnboardingTour(tourId),
     );
     const [isOpen, setIsOpen] = useState(false);
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -38,6 +38,7 @@ export const useOnboardingTour = (
 
     const finishTour = () => {
         setOnboardingTourSeen(tourId, true);
+        setHasSeenTour(true);
         setCurrentStepIndex(0);
         setIsOpen(false);
     };
@@ -55,8 +56,8 @@ export const useOnboardingTour = (
         setCurrentStepIndex((current) => Math.max(current - 1, 0));
     };
 
-    // Para testar novamente o primeiro acesso, pesquise onde o Zustand persiste
-    // localStorage e limpe a chave "labgraph-projects" ou marque o tour como não visto.
+    // Para testar novamente o primeiro acesso, limpe a chave
+    // "labgraph-onboarding" no localStorage do navegador.
     const skipTour = finishTour;
 
     return {

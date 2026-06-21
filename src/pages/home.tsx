@@ -1,4 +1,10 @@
 import { BarChart3, Table2 } from "lucide-react";
+import { useEffect } from "react";
+import {
+    fetchChartDraft,
+    fetchProjects,
+    fetchTableDraft,
+} from "../services/project-api";
 import { useProjectStore } from "../store/project-store";
 import type { ProjectDto } from "../types/project-dto";
 
@@ -18,6 +24,44 @@ export const HomePage = ({
     const projects = useProjectStore((state) => state.projects);
     const chartDraft = useProjectStore((state) => state.chartDraft);
     const tableDraft = useProjectStore((state) => state.tableDraft);
+    const setProjects = useProjectStore((state) => state.setProjects);
+    const setChartDraft = useProjectStore((state) => state.setChartDraft);
+    const setTableDraft = useProjectStore((state) => state.setTableDraft);
+
+    useEffect(() => {
+        let shouldUpdateState = true;
+
+        const loadRemoteState = async () => {
+            try {
+                const [loadedProjects, loadedChartDraft, loadedTableDraft] =
+                    await Promise.all([
+                        fetchProjects(),
+                        fetchChartDraft(),
+                        fetchTableDraft(),
+                    ]);
+
+                if (shouldUpdateState) {
+                    setProjects(loadedProjects);
+
+                    if (loadedChartDraft) {
+                        setChartDraft(loadedChartDraft);
+                    }
+
+                    if (loadedTableDraft) {
+                        setTableDraft(loadedTableDraft);
+                    }
+                }
+            } catch (error) {
+                console.warn("Não foi possível carregar os dados da API.", error);
+            }
+        };
+
+        void loadRemoteState();
+
+        return () => {
+            shouldUpdateState = false;
+        };
+    }, [setChartDraft, setProjects, setTableDraft]);
 
     return (
         <main className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 sm:py-10">
@@ -130,7 +174,7 @@ export const HomePage = ({
                         </button>
                     )}
 
-                    {projects.length === 0 && !chartDraft ? (
+                    {projects.length === 0 && !chartDraft && !tableDraft ? (
                         <div className="rounded-xl border border-dashed border-slate-300 p-5 text-center text-sm text-slate-500 sm:p-8">
                             Nenhum projeto salvo ainda.
                         </div>

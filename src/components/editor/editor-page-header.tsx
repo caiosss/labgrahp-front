@@ -1,10 +1,11 @@
 import { ArrowLeft, Eraser, HelpCircle, Save } from "lucide-react";
+import { useState } from "react";
 
 interface EditorPageHeaderProps {
     title: string;
     description: string;
     onBack: () => void;
-    onSave: () => void;
+    onSave: () => void | Promise<void>;
     onClear?: () => void;
     onStartTour?: () => void;
     lastSavedAt?: string;
@@ -25,6 +26,8 @@ export const EditorPageHeader = ({
     clearLabel = "Limpar campos",
     tourLabel = "Tutorial",
 }: EditorPageHeaderProps) => {
+    const [isSaving, setIsSaving] = useState(false);
+    const [saveError, setSaveError] = useState<string | undefined>();
     const savedLabel = lastSavedAt
         ? `Salvo as ${new Date(lastSavedAt).toLocaleTimeString("pt-BR", {
             hour: "2-digit",
@@ -37,6 +40,20 @@ export const EditorPageHeader = ({
             minute: "2-digit",
         })}`
         : undefined;
+
+    const handleSave = async () => {
+        setIsSaving(true);
+        setSaveError(undefined);
+
+        try {
+            await onSave();
+        } catch (error) {
+            console.warn("Não foi possível salvar o projeto.", error);
+            setSaveError("Não foi possível salvar agora.");
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     return (
         <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -81,15 +98,19 @@ export const EditorPageHeader = ({
                     )}
 
                     <button
-                        onClick={onSave}
+                        disabled={isSaving}
+                        onClick={handleSave}
                         className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
                     >
                         <Save size={16} />
-                        Salvar projeto
+                        {isSaving ? "Salvando..." : "Salvar projeto"}
                     </button>
                 </div>
 
                 <span className="text-xs text-slate-500">{savedLabel}</span>
+                {saveError && (
+                    <span className="text-xs text-red-600">{saveError}</span>
+                )}
                 {draftLabel && (
                     <span className="text-xs text-slate-500">{draftLabel}</span>
                 )}

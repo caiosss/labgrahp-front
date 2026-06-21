@@ -5,6 +5,11 @@ import { initialChart, initialLinearFit } from "../utils/constants/initial-chart
 import { createRandomUUID } from "../utils/create-random-uuid";
 import { generateGaussianPeak } from "../utils/generate-gaussian-peak";
 import { cloneProjectConfig, createChartProjectDto } from "../utils/project-dto";
+import {
+    deleteChartDraftFromApi,
+    saveChartDraftToApi,
+    saveProjectToApi,
+} from "../services/project-api";
 
 export const useChartEditor = (projectId?: string) => {
     const getProjectById = useProjectStore((state) => state.getProjectById);
@@ -46,6 +51,16 @@ export const useChartEditor = (projectId?: string) => {
 
         currentDraftIdRef.current = draft.id;
         setChartDraft(draft);
+
+        const timeoutId = window.setTimeout(() => {
+            void saveChartDraftToApi(draft).catch((error) => {
+                console.warn("Não foi possível salvar o rascunho do gráfico.", error);
+            });
+        }, 700);
+
+        return () => {
+            window.clearTimeout(timeoutId);
+        };
     }, [chart, currentProjectId, setChartDraft]);
 
     const updateChart = <K extends keyof ChartConfig>(
@@ -252,15 +267,16 @@ export const useChartEditor = (projectId?: string) => {
         }));
     };
 
-    const saveProject = () => {
+    const saveProject = async () => {
         const currentProject = currentProjectId
             ? getProjectById(currentProjectId)
             : undefined;
         const projectDto = createChartProjectDto(chart, currentProject);
+        const savedProject = await saveProjectToApi(projectDto);
 
-        upsertProject(projectDto);
-        setCurrentProjectId(projectDto.id);
-        setLastSavedAt(projectDto.updatedAt);
+        upsertProject(savedProject);
+        setCurrentProjectId(savedProject.id);
+        setLastSavedAt(savedProject.updatedAt);
     };
 
     const clearChart = () => {
@@ -268,6 +284,10 @@ export const useChartEditor = (projectId?: string) => {
         currentDraftIdRef.current = undefined;
         setLastSavedAt(undefined);
         setChart(cloneProjectConfig(initialChart));
+
+        void deleteChartDraftFromApi().catch((error) => {
+            console.warn("Não foi possível limpar o rascunho do gráfico na API.", error);
+        });
     };
 
     return {

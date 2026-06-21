@@ -5,9 +5,17 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:web": "vite",
+    "dev:api": "npm run dev --prefix apps/api",
     "build": "tsc -b && vite build",
+    "build:web": "tsc -b && vite build",
+    "build:api": "npm run build --prefix apps/api",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start:api": "npm run start:prod --prefix apps/api",
+    "prisma:generate": "npm run prisma:generate --prefix apps/api",
+    "prisma:migrate": "npm run prisma:migrate --prefix apps/api",
+    "prisma:deploy": "npm run prisma:deploy --prefix apps/api"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.0",

@@ -5,6 +5,11 @@ import { initialTable } from "../utils/constants/initial-table";
 import { createRandomUUID } from "../utils/create-random-uuid";
 import { exportElementAsPNG } from "../utils/export-png";
 import { cloneProjectConfig, createTableProjectDto } from "../utils/project-dto";
+import {
+    deleteTableDraftFromApi,
+    saveProjectToApi,
+    saveTableDraftToApi,
+} from "../services/project-api";
 
 export const useTableEditor = (projectId?: string) => {
     const getProjectById = useProjectStore((state) => state.getProjectById);
@@ -59,6 +64,16 @@ export const useTableEditor = (projectId?: string) => {
 
         currentDraftIdRef.current = draft.id;
         setTableDraft(draft);
+
+        const timeoutId = window.setTimeout(() => {
+            void saveTableDraftToApi(draft).catch((error) => {
+                console.warn("Não foi possível salvar o rascunho da tabela.", error);
+            });
+        }, 700);
+
+        return () => {
+            window.clearTimeout(timeoutId);
+        };
     }, [table, currentProjectId, setTableDraft]);
 
     const updateTable = <K extends keyof AbntTableConfig>(
@@ -172,15 +187,16 @@ export const useTableEditor = (projectId?: string) => {
         }));
     };
 
-    const saveProject = () => {
+    const saveProject = async () => {
         const currentProject = currentProjectId
             ? getProjectById(currentProjectId)
             : undefined;
         const projectDto = createTableProjectDto(table, currentProject);
+        const savedProject = await saveProjectToApi(projectDto);
 
-        upsertProject(projectDto);
-        setCurrentProjectId(projectDto.id);
-        setLastSavedAt(projectDto.updatedAt);
+        upsertProject(savedProject);
+        setCurrentProjectId(savedProject.id);
+        setLastSavedAt(savedProject.updatedAt);
     };
 
     const clearTable = () => {
@@ -188,6 +204,10 @@ export const useTableEditor = (projectId?: string) => {
         currentDraftIdRef.current = undefined;
         setLastSavedAt(undefined);
         setTable(cloneProjectConfig(initialTable));
+
+        void deleteTableDraftFromApi().catch((error) => {
+            console.warn("Não foi possível limpar o rascunho da tabela na API.", error);
+        });
     };
 
     return {

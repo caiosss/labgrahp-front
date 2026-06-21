@@ -1,4 +1,5 @@
-const CACHE_VERSION = "labgraph-v1";
+const CACHE_VERSION = "labgraph-v2";
+const CACHE_PREFIX = "labgraph-";
 const APP_SHELL_URLS = [
   "/",
   "/manifest.webmanifest",
@@ -25,11 +26,23 @@ self.addEventListener("activate", (event) => {
       .then((cacheNames) =>
         Promise.all(
           cacheNames
-            .filter((cacheName) => cacheName !== CACHE_VERSION)
+            .filter(
+              (cacheName) =>
+                cacheName.startsWith(CACHE_PREFIX) && cacheName !== CACHE_VERSION,
+            )
             .map((cacheName) => caches.delete(cacheName)),
         ),
       )
-      .then(() => self.clients.claim()),
+      .then(() => self.clients.claim())
+      .then(() => self.clients.matchAll({ type: "window" }))
+      .then((clients) => {
+        clients.forEach((client) => {
+          client.postMessage({
+            type: "LABGRAPH_PWA_UPDATED",
+            version: CACHE_VERSION,
+          });
+        });
+      }),
   );
 });
 
@@ -52,6 +65,22 @@ self.addEventListener("fetch", (event) => {
           return response;
         })
         .catch(() => caches.match("/")),
+    );
+    return;
+  }
+
+  if (request.url.includes("/assets/")) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          const responseClone = response.clone();
+          caches.open(CACHE_VERSION).then((cache) => {
+            cache.put(request, responseClone);
+          });
+
+          return response;
+        })
+        .catch(() => caches.match(request)),
     );
     return;
   }
