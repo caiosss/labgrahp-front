@@ -52,10 +52,15 @@ export const ShareProjectDialog = ({
     const [shareLink, setShareLink] = useState("");
     const hasRequestedShareRef = useRef(false);
     const onEnsureSavedRef = useRef(onEnsureSaved);
+    const projectIdRef = useRef(projectId);
 
     useEffect(() => {
         onEnsureSavedRef.current = onEnsureSaved;
     }, [onEnsureSaved]);
+
+    useEffect(() => {
+        projectIdRef.current = projectId;
+    }, [projectId]);
 
     useEffect(() => {
         if (!isOpen) {
@@ -77,7 +82,8 @@ export const ShareProjectDialog = ({
             setShareLink("");
 
             try {
-                const ensuredProjectId = projectId ?? (await onEnsureSavedRef.current());
+                const ensuredProjectId =
+                    projectIdRef.current ?? (await onEnsureSavedRef.current());
 
                 if (!ensuredProjectId) {
                     throw new Error("Projeto não salvo.");
@@ -111,7 +117,7 @@ export const ShareProjectDialog = ({
         return () => {
             shouldUpdateState = false;
         };
-    }, [isOpen, projectId]);
+    }, [isOpen]);
 
     const copyLink = async () => {
         if (!shareLink) {
