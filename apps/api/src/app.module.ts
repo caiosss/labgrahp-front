@@ -5,9 +5,11 @@ import { DraftsModule } from "./modules/drafts/drafts.module";
 import { ProjectsModule } from "./modules/projects/projects.module";
 import { SessionsModule } from "./modules/sessions/sessions.module";
 import { SharesModule } from "./modules/shares/shares.module";
+import { AppController } from "./app.controller";
 
 @Module({
   imports: [SessionsModule, ProjectsModule, DraftsModule, SharesModule],
+  controllers: [AppController],
   providers: [PrismaService, TokenService],
 })
 export class AppModule {}
