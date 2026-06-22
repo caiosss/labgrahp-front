@@ -1,7 +1,9 @@
 "use client";
 
+import { useCallback, useState } from "react";
 import { EditorPageHeader } from "../components/editor/editor-page-header";
 import { OnboardingTour } from "../components/onboarding/onboarding-tour";
+import { ShareProjectDialog } from "../components/share/share-project-dialog";
 import { TableBasicSettings } from "../components/table/editor/table-basic-settings";
 import { TableColumnsSection } from "../components/table/editor/table-columns-section";
 import { TablePreviewPanel } from "../components/table/editor/table-preview-panel";
@@ -18,6 +20,13 @@ interface TableEditorPageProps {
 export const TableEditorPage = ({ onBack, projectId }: TableEditorPageProps) => {
     const editor = useTableEditor(projectId);
     const onboarding = useOnboardingTour("table-editor", tableEditorTourSteps);
+    const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
+
+    const ensureProjectSaved = useCallback(async () => {
+        const savedProject = await editor.saveProject();
+
+        return savedProject?.id;
+    }, [editor]);
 
     const handleClearTable = () => {
         const confirmed = window.confirm(
@@ -38,6 +47,7 @@ export const TableEditorPage = ({ onBack, projectId }: TableEditorPageProps) => 
                         description="Edite os dados a esquerda e visualize o resultado a direita."
                         onBack={onBack}
                         onSave={editor.saveProject}
+                        onShare={() => setIsShareDialogOpen(true)}
                         onClear={handleClearTable}
                         onStartTour={onboarding.startTour}
                         lastSavedAt={editor.lastSavedAt}
@@ -84,6 +94,13 @@ export const TableEditorPage = ({ onBack, projectId }: TableEditorPageProps) => 
                 onPrevious={onboarding.previousStep}
                 onSkip={onboarding.skipTour}
                 steps={tableEditorTourSteps}
+            />
+
+            <ShareProjectDialog
+                isOpen={isShareDialogOpen}
+                onEnsureSaved={ensureProjectSaved}
+                onOpenChange={setIsShareDialogOpen}
+                projectId={editor.currentProjectId}
             />
         </main>
     );

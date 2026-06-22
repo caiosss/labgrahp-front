@@ -3,9 +3,10 @@ import type {
     ChartConfig,
     ChartSeries,
     DataPoint,
+    ExponentialFitConfig,
     LinearFitConfig,
 } from "../../../types/chart";
-import { initialLinearFit } from "../../../utils/constants/initial-chart";
+import { initialExponentialFit, initialLinearFit } from "../../../utils/constants/initial-chart";
 
 interface ChartSeriesSectionProps {
     chart: ChartConfig;
@@ -268,6 +269,139 @@ const LinearFitFields = ({
     );
 };
 
+const ExponentialFitFields = ({
+    serie,
+    updateSeries,
+}: Pick<ChartSeriesCardProps, "serie" | "updateSeries">) => {
+    const exponentialFit = serie.exponentialFit ?? initialExponentialFit;
+    const updateExponentialFit = <K extends keyof ExponentialFitConfig>(
+        key: K,
+        value: ExponentialFitConfig[K],
+    ) => {
+        updateSeries(serie.id, "exponentialFit", {
+            ...exponentialFit,
+            [key]: value,
+        });
+    };
+
+    return (
+        <div className="mb-4 rounded-xl border border-emerald-100 bg-emerald-50/70 p-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                    <h4 className="text-sm font-semibold text-emerald-950">
+                        Ajuste exponencial
+                    </h4>
+                    <p className="mt-1 text-xs leading-5 text-emerald-800">
+                        Gera uma curva y = a·e^(bx) usando pontos positivos desta série.
+                    </p>
+                </div>
+
+                <label className="inline-flex items-center gap-2 text-sm font-medium text-emerald-950">
+                    <input
+                        type="checkbox"
+                        checked={exponentialFit.enabled}
+                        onChange={(event) =>
+                            updateExponentialFit("enabled", event.target.checked)
+                        }
+                    />
+                    Ativar
+                </label>
+            </div>
+
+            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+                    <input
+                        type="checkbox"
+                        checked={exponentialFit.showEquation}
+                        onChange={(event) =>
+                            updateExponentialFit("showEquation", event.target.checked)
+                        }
+                    />
+                    Mostrar equação na legenda
+                </label>
+
+                <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+                    <input
+                        type="checkbox"
+                        checked={exponentialFit.showRSquared ?? true}
+                        onChange={(event) =>
+                            updateExponentialFit("showRSquared", event.target.checked)
+                        }
+                    />
+                    Incluir R²
+                </label>
+            </div>
+
+            {exponentialFit.enabled && (
+                <div className="mt-3 space-y-3">
+                    <p className="text-xs text-emerald-700">
+                        A curva aparece quando houver pelo menos dois pontos com Y maior que zero e valores de X diferentes.
+                    </p>
+
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                        <div className="space-y-2">
+                            <label className="text-xs font-medium text-slate-700">
+                                Cor da curva
+                            </label>
+
+                            <input
+                                type="color"
+                                value={exponentialFit.color}
+                                onChange={(event) =>
+                                    updateExponentialFit("color", event.target.value)
+                                }
+                                className="h-10 w-full rounded-lg border border-slate-300"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-xs font-medium text-slate-700">
+                                Espessura
+                            </label>
+
+                            <input
+                                type="number"
+                                min="1"
+                                value={exponentialFit.lineWidth}
+                                onChange={(event) =>
+                                    updateExponentialFit("lineWidth", event.target.value)
+                                }
+                                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-xs font-medium text-slate-700">
+                                Tipo da curva
+                            </label>
+
+                            <select
+                                value={exponentialFit.lineDash}
+                                onChange={(event) =>
+                                    updateExponentialFit(
+                                        "lineDash",
+                                        event.target.value as ExponentialFitConfig["lineDash"],
+                                    )
+                                }
+                                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500"
+                            >
+                                <option value="solid">Contínua</option>
+                                <option value="dash">Tracejada</option>
+                                <option value="dot">Pontilhada</option>
+                                <option value="dashdot">Traço-ponto</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <p className="text-xs text-slate-600">
+                        Como a regressão usa ln(y), pontos com Y igual ou menor que zero são ignorados neste ajuste.
+                    </p>
+                </div>
+            )}
+        </div>
+    );
+};
+
 const GaussianPeakFields = ({
     serie,
     updateGaussianPeak,
@@ -426,6 +560,8 @@ const ChartSeriesCard = ({
             <SeriesStyleFields serie={serie} updateSeries={updateSeries} />
 
             <LinearFitFields serie={serie} updateSeries={updateSeries} />
+
+            <ExponentialFitFields serie={serie} updateSeries={updateSeries} />
 
             <GaussianPeakFields
                 serie={serie}

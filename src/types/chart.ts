@@ -30,6 +30,15 @@ export interface LinearFitConfig {
     showRSquared: boolean;
 }
 
+export interface ExponentialFitConfig {
+    enabled: boolean;
+    color: string;
+    lineWidth: string;
+    lineDash: LineDash;
+    showEquation: boolean;
+    showRSquared: boolean;
+}
+
 export interface DataPoint {
     id: string;
     x: string;
@@ -63,6 +72,7 @@ export interface ChartSeries {
     points: DataPoint[];
 
     gaussianPeak?: GaussianPeakConfig;
+    exponentialFit?: ExponentialFitConfig;
     linearFit?: LinearFitConfig;
 }
 

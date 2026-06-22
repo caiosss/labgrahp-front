@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useState } from "react";
 import { ChartAppearanceSection } from "../components/chart/editor/chart-appearance-section";
 import { ChartAxisScaleSection } from "../components/chart/editor/chart-axis-scale-section";
 import { ChartBasicSettings } from "../components/chart/editor/chart-basic-settings";
@@ -8,6 +9,7 @@ import { ChartPreviewPanel } from "../components/chart/editor/chart-preview-pane
 import { ChartSeriesSection } from "../components/chart/editor/chart-series-section";
 import { EditorPageHeader } from "../components/editor/editor-page-header";
 import { OnboardingTour } from "../components/onboarding/onboarding-tour";
+import { ShareProjectDialog } from "../components/share/share-project-dialog";
 import { useChartEditor } from "../hooks/use-chart-editor";
 import { useOnboardingTour } from "../hooks/use-onboarding-tour";
 import { chartEditorTourSteps } from "../utils/constants/onboarding-tours";
@@ -20,6 +22,13 @@ interface ChartEditorPageProps {
 export const ChartEditorPage = ({ onBack, projectId }: ChartEditorPageProps) => {
     const editor = useChartEditor(projectId);
     const onboarding = useOnboardingTour("chart-editor", chartEditorTourSteps);
+    const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
+
+    const ensureProjectSaved = useCallback(async () => {
+        const savedProject = await editor.saveProject();
+
+        return savedProject?.id;
+    }, [editor]);
     
     const handleClearChart = () => {
         const confirmed = window.confirm(
@@ -40,6 +49,7 @@ export const ChartEditorPage = ({ onBack, projectId }: ChartEditorPageProps) => 
                         description="Monte o gráfico por etapas e mantenha o rascunho salvo automaticamente."
                         onBack={onBack}
                         onSave={editor.saveProject}
+                        onShare={() => setIsShareDialogOpen(true)}
                         onClear={handleClearChart}
                         onStartTour={onboarding.startTour}
                         lastSavedAt={editor.lastSavedAt}
@@ -93,6 +103,13 @@ export const ChartEditorPage = ({ onBack, projectId }: ChartEditorPageProps) => 
                 onPrevious={onboarding.previousStep}
                 onSkip={onboarding.skipTour}
                 steps={chartEditorTourSteps}
+            />
+
+            <ShareProjectDialog
+                isOpen={isShareDialogOpen}
+                onEnsureSaved={ensureProjectSaved}
+                onOpenChange={setIsShareDialogOpen}
+                projectId={editor.currentProjectId}
             />
         </main>
     );

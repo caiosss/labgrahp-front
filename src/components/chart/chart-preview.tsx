@@ -9,7 +9,9 @@ import {
     shouldBreakLineAtPoint,
 } from "../../utils/chart/chart-data";
 import {
+    calculateExponentialRegression,
     calculateLinearRegression,
+    formatExponentialRegressionEquation,
     formatLinearRegressionEquation,
 } from "../../utils/regression";
 
@@ -86,7 +88,27 @@ export const ChartPreview = ({ chart, onReady }: ChartPreviewProps) => {
             const equation = regression
                 ? formatLinearRegressionEquation(regression, { includeRSquared })
                 : undefined;
-            const shouldShowEquation = (serie.linearFit?.showEquation ?? true) && equation;
+            const exponentialRegression =
+                calculateExponentialRegression(regressionPoints);
+            const includeExponentialRSquared =
+                serie.exponentialFit?.showRSquared ?? true;
+            const exponentialEquation = exponentialRegression
+                ? formatExponentialRegressionEquation(exponentialRegression, {
+                    includeRSquared: includeExponentialRSquared,
+                })
+                : undefined;
+            const legendEquations = [
+                (serie.linearFit?.showEquation ?? true) && equation
+                    ? equation
+                    : undefined,
+                (serie.exponentialFit?.showEquation ?? false) && exponentialEquation
+                    ? exponentialEquation
+                    : undefined,
+            ].filter(Boolean);
+            const traceName =
+                legendEquations.length > 0
+                    ? `${seriesName}: ${legendEquations.join(" | ")}`
+                    : seriesName;
             const seriesTraces: Data[] = [];
             const originalTrace: Data = {
                 x:
@@ -99,7 +121,7 @@ export const ChartPreview = ({ chart, onReady }: ChartPreviewProps) => {
                         : linePoints.y,
                 type: "scatter" as const,
                 mode: chart.mode,
-                name: shouldShowEquation ? `${seriesName}: ${equation}` : seriesName,
+                name: traceName,
                 legendgroup: serie.id,
                 cliponaxis: false,
                 marker: {
@@ -135,34 +157,52 @@ export const ChartPreview = ({ chart, onReady }: ChartPreviewProps) => {
                 });
             }
 
-            if (!serie.linearFit?.enabled) {
-                return seriesTraces;
+            if (serie.linearFit?.enabled && regression) {
+                const linearFitName = `Ajuste linear - ${seriesName}`;
+                const linearFitTrace: Data = {
+                    x: regression.x,
+                    y: regression.y,
+                    type: "scatter" as const,
+                    mode: "lines" as const,
+                    name: linearFitName,
+                    legendgroup: serie.id,
+                    hovertemplate: serie.linearFit.showEquation
+                        ? `${equation}<extra></extra>`
+                        : undefined,
+                    line: {
+                        color: serie.linearFit.color || serie.color,
+                        width: Number(serie.linearFit.lineWidth) || 2,
+                        dash: serie.linearFit.lineDash,
+                        shape: "linear",
+                    },
+                };
+
+                seriesTraces.push(linearFitTrace);
             }
 
-            if (!regression) {
-                return seriesTraces;
+            if (serie.exponentialFit?.enabled && exponentialRegression) {
+                const exponentialFitTrace: Data = {
+                    x: exponentialRegression.x,
+                    y: exponentialRegression.y,
+                    type: "scatter" as const,
+                    mode: "lines" as const,
+                    name: `Ajuste exponencial - ${seriesName}`,
+                    legendgroup: serie.id,
+                    hovertemplate: serie.exponentialFit.showEquation
+                        ? `${exponentialEquation}<extra></extra>`
+                        : undefined,
+                    line: {
+                        color: serie.exponentialFit.color || serie.color,
+                        width: Number(serie.exponentialFit.lineWidth) || 2,
+                        dash: serie.exponentialFit.lineDash,
+                        shape: "spline",
+                    },
+                };
+
+                seriesTraces.push(exponentialFitTrace);
             }
 
-            const linearFitName = `Ajuste linear - ${seriesName}`;
-            const linearFitTrace: Data = {
-                x: regression.x,
-                y: regression.y,
-                type: "scatter" as const,
-                mode: "lines" as const,
-                name: linearFitName,
-                legendgroup: serie.id,
-                hovertemplate: serie.linearFit.showEquation
-                    ? `${equation}<extra></extra>`
-                    : undefined,
-                line: {
-                    color: serie.linearFit.color || serie.color,
-                    width: Number(serie.linearFit.lineWidth) || 2,
-                    dash: serie.linearFit.lineDash,
-                    shape: "linear",
-                },
-            };
-
-            return [...seriesTraces, linearFitTrace];
+            return seriesTraces;
         });
 
     if (plotSeries.length === 0) {

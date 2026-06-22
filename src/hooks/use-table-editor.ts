@@ -197,6 +197,8 @@ export const useTableEditor = (projectId?: string) => {
         upsertProject(savedProject);
         setCurrentProjectId(savedProject.id);
         setLastSavedAt(savedProject.updatedAt);
+
+        return savedProject;
     };
 
     const clearTable = () => {
@@ -212,6 +214,7 @@ export const useTableEditor = (projectId?: string) => {
 
     return {
         table,
+        currentProjectId,
         previewRef,
         lastSavedAt,
         lastDraftSavedAt: tableDraft?.updatedAt,

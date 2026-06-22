@@ -1,4 +1,4 @@
-import type { ChartConfig, LinearFitConfig } from "../../types/chart";
+import type { ChartConfig, ExponentialFitConfig, LinearFitConfig } from "../../types/chart";
 import { createRandomUUID } from "../create-random-uuid";
 
 export const initialLinearFit: LinearFitConfig = {
@@ -6,6 +6,15 @@ export const initialLinearFit: LinearFitConfig = {
     color: "#f97316",
     lineWidth: "2",
     lineDash: "dash",
+    showEquation: true,
+    showRSquared: true,
+};
+
+export const initialExponentialFit: ExponentialFitConfig = {
+    enabled: false,
+    color: "#16a34a",
+    lineWidth: "2",
+    lineDash: "dot",
     showEquation: true,
     showRSquared: true,
 };
@@ -55,6 +64,7 @@ export const initialChart: ChartConfig = {
             lineWidth: "2",
             lineDash: "solid",
             lineShape: "linear",
+            exponentialFit: { ...initialExponentialFit },
             linearFit: { ...initialLinearFit },
             points: [
                 { id: createRandomUUID(), x: "0", y: "0.82" },
