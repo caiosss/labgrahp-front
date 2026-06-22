@@ -22,12 +22,15 @@ export const generateChartEquationSummaries = (
         const regressionPoints = getValidPoints(serie.points).filter(
             (point) => !shouldBreakLineAtPoint(point),
         );
+        const exponentialModel = serie.exponentialFit?.model ?? "simple";
         const positiveRegressionPoints = regressionPoints.filter(
             (point) => point.y > 0,
         );
         const regression = calculateLinearRegression(regressionPoints);
         const exponentialRegression =
-            calculateExponentialRegression(regressionPoints);
+            calculateExponentialRegression(regressionPoints, {
+                model: exponentialModel,
+            });
         const seriesName = serie.name || "Série sem nome";
         const summaries: ChartEquationSummary[] = [];
 
@@ -55,15 +58,23 @@ export const generateChartEquationSummaries = (
                 equation: formatExponentialRegressionEquation(exponentialRegression, {
                     includeRSquared: serie.exponentialFit?.showRSquared ?? true,
                 }),
-                pointsUsed: positiveRegressionPoints.length,
+                pointsUsed:
+                    exponentialModel === "vertical-offset"
+                        ? regressionPoints.length
+                        : positiveRegressionPoints.length,
                 seriesId: `${serie.id}-exponential`,
                 seriesName: `${seriesName} - exponencial`,
             });
         } else {
             summaries.push({
                 message:
-                    "Não há pontos positivos suficientes para calcular uma regressão exponencial.",
-                pointsUsed: positiveRegressionPoints.length,
+                    exponentialModel === "vertical-offset"
+                        ? "Não há pontos suficientes para calcular uma regressão exponencial com deslocamento vertical."
+                        : "Não há pontos positivos suficientes para calcular uma regressão exponencial.",
+                pointsUsed:
+                    exponentialModel === "vertical-offset"
+                        ? regressionPoints.length
+                        : positiveRegressionPoints.length,
                 seriesId: `${serie.id}-exponential`,
                 seriesName: `${seriesName} - exponencial`,
             });

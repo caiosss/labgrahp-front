@@ -14,12 +14,17 @@ export interface LinearRegressionResult {
 }
 
 export interface ExponentialRegressionResult {
+    model: ExponentialRegressionModel;
     a: number;
     b: number;
+    k: number;
     rSquared: number;
     x: number[];
     y: number[];
+    y0?: number;
 }
+
+export type ExponentialRegressionModel = "simple" | "vertical-offset";
 
 const roundDisplayNumber = (value: number) => {
     if (Object.is(value, -0)) {
@@ -65,7 +70,42 @@ export const calculateLinearRegression = (
     };
 };
 
-export const calculateExponentialRegression = (
+const buildExponentialCurve = (
+    xValues: number[],
+    predict: (x: number) => number,
+) => {
+    const minX = Math.min(...xValues);
+    const maxX = Math.max(...xValues);
+    const stepCount = 80;
+    const step = (maxX - minX) / (stepCount - 1);
+    const x = Array.from({ length: stepCount }, (_, index) => minX + step * index);
+    const y = x.map((xValue) => predict(xValue));
+
+    return { x, y };
+};
+
+const calculateRSquared = (
+    points: RegressionPoint[],
+    predict: (x: number) => number,
+) => {
+    const meanY =
+        points.reduce((sum, point) => sum + point.y, 0) / points.length;
+    const residualSumOfSquares = points.reduce((sum, point) => {
+        const predictedY = predict(point.x);
+
+        return sum + (point.y - predictedY) ** 2;
+    }, 0);
+    const totalSumOfSquares = points.reduce(
+        (sum, point) => sum + (point.y - meanY) ** 2,
+        0,
+    );
+
+    return totalSumOfSquares === 0
+        ? 1
+        : 1 - residualSumOfSquares / totalSumOfSquares;
+};
+
+const calculateSimpleExponentialRegression = (
     points: RegressionPoint[],
 ): ExponentialRegressionResult | null => {
     const validPoints = points.filter(
@@ -86,34 +126,106 @@ export const calculateExponentialRegression = (
     const regression = linearRegression(transformedInput);
     const a = Math.exp(regression.b);
     const b = regression.m;
+    const k = -b;
     const xValues = validPoints.map((point) => point.x);
-    const minX = Math.min(...xValues);
-    const maxX = Math.max(...xValues);
-    const stepCount = 80;
-    const step = (maxX - minX) / (stepCount - 1);
-    const x = Array.from({ length: stepCount }, (_, index) => minX + step * index);
-    const y = x.map((xValue) => a * Math.exp(b * xValue));
-    const meanY =
-        validPoints.reduce((sum, point) => sum + point.y, 0) / validPoints.length;
-    const residualSumOfSquares = validPoints.reduce((sum, point) => {
-        const predictedY = a * Math.exp(b * point.x);
-
-        return sum + (point.y - predictedY) ** 2;
-    }, 0);
-    const totalSumOfSquares = validPoints.reduce(
-        (sum, point) => sum + (point.y - meanY) ** 2,
-        0,
-    );
-    const coefficientOfDetermination =
-        totalSumOfSquares === 0 ? 1 : 1 - residualSumOfSquares / totalSumOfSquares;
+    const predict = (xValue: number) => a * Math.exp(b * xValue);
+    const curve = buildExponentialCurve(xValues, predict);
 
     return {
         a,
         b,
-        rSquared: coefficientOfDetermination,
-        x,
-        y,
+        k,
+        model: "simple",
+        rSquared: calculateRSquared(validPoints, predict),
+        x: curve.x,
+        y: curve.y,
     };
+};
+
+const calculateOffsetExponentialRegression = (
+    points: RegressionPoint[],
+): ExponentialRegressionResult | null => {
+    const validPoints = points.filter(
+        (point) => Number.isFinite(point.x) && Number.isFinite(point.y),
+    );
+    const uniqueXValues = new Set(validPoints.map((point) => point.x));
+
+    if (validPoints.length < 3 || uniqueXValues.size < 2) {
+        return null;
+    }
+
+    const yValues = validPoints.map((point) => point.y);
+    const minY = Math.min(...yValues);
+    const maxY = Math.max(...yValues);
+    const ySpan = maxY - minY;
+
+    if (ySpan === 0) {
+        return null;
+    }
+
+    const searchSpan = Math.max(Math.abs(ySpan), Math.abs(minY) * 0.2, 1);
+    const lowerY0 = minY - searchSpan * 3;
+    const upperY0 = minY - searchSpan * 0.000001;
+    const candidateCount = 120;
+
+    let bestResult: ExponentialRegressionResult | null = null;
+
+    for (let index = 0; index < candidateCount; index += 1) {
+        const ratio = index / (candidateCount - 1);
+        const y0 = lowerY0 + (upperY0 - lowerY0) * ratio;
+        const transformedInput = validPoints.map(
+            (point) => [point.x, Math.log(point.y - y0)] as [number, number],
+        );
+
+        if (
+            transformedInput.some(([, transformedY]) => !Number.isFinite(transformedY))
+        ) {
+            continue;
+        }
+
+        const regression = linearRegression(transformedInput);
+        const a = Math.exp(regression.b);
+        const b = regression.m;
+        const k = -b;
+        const predict = (xValue: number) => y0 + a * Math.exp(b * xValue);
+        const coefficientOfDetermination = calculateRSquared(validPoints, predict);
+
+        if (
+            bestResult &&
+            coefficientOfDetermination <= bestResult.rSquared
+        ) {
+            continue;
+        }
+
+        const curve = buildExponentialCurve(
+            validPoints.map((point) => point.x),
+            predict,
+        );
+
+        bestResult = {
+            a,
+            b,
+            k,
+            model: "vertical-offset",
+            rSquared: coefficientOfDetermination,
+            x: curve.x,
+            y: curve.y,
+            y0,
+        };
+    }
+
+    return bestResult;
+};
+
+export const calculateExponentialRegression = (
+    points: RegressionPoint[],
+    options?: { model?: ExponentialRegressionModel },
+): ExponentialRegressionResult | null => {
+    if (options?.model === "vertical-offset") {
+        return calculateOffsetExponentialRegression(points);
+    }
+
+    return calculateSimpleExponentialRegression(points);
 };
 
 export const formatLinearRegressionEquation = ({
@@ -133,10 +245,17 @@ export const formatLinearRegressionEquation = ({
 
 export const formatExponentialRegressionEquation = ({
     a,
-    b,
+    k,
+    model,
     rSquared: coefficientOfDetermination,
+    y0,
 }: ExponentialRegressionResult, options?: { includeRSquared?: boolean }) => {
-    const equation = `y = ${roundDisplayNumber(a)}e^(${roundDisplayNumber(b)}x)`;
+    const exponentSign = k >= 0 ? "-" : "+";
+    const exponent = `${exponentSign}${roundDisplayNumber(Math.abs(k))}x`;
+    const equation =
+        model === "vertical-offset" && y0 !== undefined
+            ? `y = ${roundDisplayNumber(y0)} + ${roundDisplayNumber(a)}e^(${exponent})`
+            : `y = ${roundDisplayNumber(a)}e^(${exponent})`;
 
     if (options?.includeRSquared === false) {
         return equation;

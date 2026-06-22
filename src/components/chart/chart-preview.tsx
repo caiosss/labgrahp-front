@@ -89,7 +89,9 @@ export const ChartPreview = ({ chart, onReady }: ChartPreviewProps) => {
                 ? formatLinearRegressionEquation(regression, { includeRSquared })
                 : undefined;
             const exponentialRegression =
-                calculateExponentialRegression(regressionPoints);
+                calculateExponentialRegression(regressionPoints, {
+                    model: serie.exponentialFit?.model ?? "simple",
+                });
             const includeExponentialRSquared =
                 serie.exponentialFit?.showRSquared ?? true;
             const exponentialEquation = exponentialRegression

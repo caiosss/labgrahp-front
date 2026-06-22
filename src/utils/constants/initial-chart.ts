@@ -12,6 +12,7 @@ export const initialLinearFit: LinearFitConfig = {
 
 export const initialExponentialFit: ExponentialFitConfig = {
     enabled: false,
+    model: "simple",
     color: "#16a34a",
     lineWidth: "2",
     lineDash: "dot",

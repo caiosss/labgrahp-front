@@ -273,7 +273,8 @@ const ExponentialFitFields = ({
     serie,
     updateSeries,
 }: Pick<ChartSeriesCardProps, "serie" | "updateSeries">) => {
-    const exponentialFit = serie.exponentialFit ?? initialExponentialFit;
+    const exponentialFit = { ...initialExponentialFit, ...serie.exponentialFit };
+    const exponentialModel = exponentialFit.model;
     const updateExponentialFit = <K extends keyof ExponentialFitConfig>(
         key: K,
         value: ExponentialFitConfig[K],
@@ -292,7 +293,7 @@ const ExponentialFitFields = ({
                         Ajuste exponencial
                     </h4>
                     <p className="mt-1 text-xs leading-5 text-emerald-800">
-                        Gera uma curva y = a·e^(bx) usando pontos positivos desta série.
+                        Gera uma curva exponencial por série. Use deslocamento vertical quando os dados tendem a um patamar diferente de zero.
                     </p>
                 </div>
 
@@ -335,10 +336,36 @@ const ExponentialFitFields = ({
             {exponentialFit.enabled && (
                 <div className="mt-3 space-y-3">
                     <p className="text-xs text-emerald-700">
-                        A curva aparece quando houver pelo menos dois pontos com Y maior que zero e valores de X diferentes.
+                        {exponentialModel === "vertical-offset"
+                            ? "Modelo usado: y = y0 + A·e^(-kx), com y0 estimado a partir dos dados."
+                            : "Modelo usado: y = A·e^(-kx), assumindo assíntota em zero."}
                     </p>
 
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                        <div className="space-y-2 sm:col-span-3">
+                            <label className="text-xs font-medium text-slate-700">
+                                Modelo da curva
+                            </label>
+
+                            <select
+                                value={exponentialModel}
+                                onChange={(event) =>
+                                    updateExponentialFit(
+                                        "model",
+                                        event.target.value as ExponentialFitConfig["model"],
+                                    )
+                                }
+                                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500"
+                            >
+                                <option value="simple">
+                                    Sem deslocamento: y = A·e^(-kx)
+                                </option>
+                                <option value="vertical-offset">
+                                    Com deslocamento vertical: y = y0 + A·e^(-kx)
+                                </option>
+                            </select>
+                        </div>
+
                         <div className="space-y-2">
                             <label className="text-xs font-medium text-slate-700">
                                 Cor da curva
@@ -394,7 +421,9 @@ const ExponentialFitFields = ({
                     </div>
 
                     <p className="text-xs text-slate-600">
-                        Como a regressão usa ln(y), pontos com Y igual ou menor que zero são ignorados neste ajuste.
+                        {exponentialModel === "vertical-offset"
+                            ? "Este modelo é útil quando existe um valor residual, linha de base ou patamar final que não deve ser forçado a zero."
+                            : "Como este modelo usa ln(y), pontos com Y igual ou menor que zero são ignorados no ajuste."}
                     </p>
                 </div>
             )}

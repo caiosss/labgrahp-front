@@ -21,6 +21,8 @@ export type LineShape = "linear" | "spline";
 
 export type SeriesType = "manual" | "gaussian-peak";
 
+export type ExponentialFitModel = "simple" | "vertical-offset";
+
 export interface LinearFitConfig {
     enabled: boolean;
     color: string;
@@ -32,6 +34,7 @@ export interface LinearFitConfig {
 
 export interface ExponentialFitConfig {
     enabled: boolean;
+    model: ExponentialFitModel;
     color: string;
     lineWidth: string;
     lineDash: LineDash;
