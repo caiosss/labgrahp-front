@@ -1,10 +1,11 @@
 import { jwtVerify, SignJWT } from "jose";
+import { randomUUID } from "node:crypto";
 
 const ACCESS_TOKEN_AUDIENCE = "labgraph-api";
 const ACCESS_TOKEN_ISSUER = "labgraph-identity";
 export const ACCESS_TOKEN_EXPIRES_IN_SECONDS = process.env.JWT_ACCESS_EXPIRATION
   ? Number(process.env.JWT_ACCESS_EXPIRATION)
-  : 432000;
+  : 900;
 
 const getAccessTokenSecret = () => {
   const secret = process.env.JWT_ACCESS_SECRET;
@@ -24,6 +25,7 @@ export const createAccessToken = (userId) => {
     .setSubject(userId)
     .setIssuer(ACCESS_TOKEN_ISSUER)
     .setAudience(ACCESS_TOKEN_AUDIENCE)
+    .setJti(randomUUID())
     .setIssuedAt()
     .setExpirationTime(`${ACCESS_TOKEN_EXPIRES_IN_SECONDS}s`)
     .sign(getAccessTokenSecret());

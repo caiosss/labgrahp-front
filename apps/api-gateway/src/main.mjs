@@ -67,7 +67,10 @@ createServer(async (request, response) => {
   try {
     const headers = new Headers();
     for (const [name, value] of Object.entries(request.headers)) {
-      if (value && !["host", "content-length", "connection"].includes(name)) {
+      if (
+        value &&
+        !["host", "content-length", "connection", "expect"].includes(name)
+      ) {
         headers.set(name, Array.isArray(value) ? value.join(",") : value);
       }
     }

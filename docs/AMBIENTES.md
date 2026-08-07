@@ -104,11 +104,11 @@ GOOGLE_CLIENT_ID=valor-do-google-cloud
 GOOGLE_CLIENT_SECRET=segredo-do-google-cloud
 GOOGLE_CALLBACK_URL=https://DOMINIO-PUBLICO-DO-GATEWAY/auth/google/callback
 JWT_ACCESS_SECRET=segredo-aleatorio-proprio
-JWT_REFRESH_SECRET=outro-segredo-aleatorio
+JWT_ACCESS_EXPIRATION=900
 ```
 
-Se você adotar refresh tokens opacos como planejado, `JWT_REFRESH_SECRET` poderá
-ser removida. Até finalizar essa decisão, mantenha-a diferente do access secret.
+O refresh token é opaco, fica em cookie HttpOnly e seu hash é persistido no
+banco. Por isso não existe `JWT_REFRESH_SECRET`.
 
 Cadastre `GOOGLE_CALLBACK_URL` exatamente igual em **Authorized redirect URIs**
 no Google Cloud.
