@@ -5,6 +5,7 @@ import {
     fetchProjects,
     fetchTableDraft,
 } from "../services/project-api";
+import { logClientError } from "../services/client-logger";
 import { useProjectStore } from "../store/project-store";
 import type { ProjectDto } from "../types/project-dto";
 
@@ -32,27 +33,37 @@ export const HomePage = ({
         let shouldUpdateState = true;
 
         const loadRemoteState = async () => {
-            try {
-                const [loadedProjects, loadedChartDraft, loadedTableDraft] =
-                    await Promise.all([
-                        fetchProjects(),
-                        fetchChartDraft(),
-                        fetchTableDraft(),
-                    ]);
+            const [projectsResult, chartDraftResult, tableDraftResult] =
+                await Promise.allSettled([
+                    fetchProjects(),
+                    fetchChartDraft(),
+                    fetchTableDraft(),
+                ]);
 
-                if (shouldUpdateState) {
-                    setProjects(loadedProjects);
+            if (!shouldUpdateState) {
+                return;
+            }
 
-                    if (loadedChartDraft) {
-                        setChartDraft(loadedChartDraft);
-                    }
+            if (projectsResult.status === "fulfilled") {
+                setProjects(projectsResult.value);
+            } else {
+                logClientError("home-load-projects", projectsResult.reason);
+            }
 
-                    if (loadedTableDraft) {
-                        setTableDraft(loadedTableDraft);
-                    }
-                }
-            } catch (error) {
-                console.warn("Não foi possível carregar os dados da API.", error);
+            if (chartDraftResult.status === "fulfilled" && chartDraftResult.value) {
+                setChartDraft(chartDraftResult.value);
+            }
+
+            if (chartDraftResult.status === "rejected") {
+                logClientError("home-load-chart-draft", chartDraftResult.reason);
+            }
+
+            if (tableDraftResult.status === "fulfilled" && tableDraftResult.value) {
+                setTableDraft(tableDraftResult.value);
+            }
+
+            if (tableDraftResult.status === "rejected") {
+                logClientError("home-load-table-draft", tableDraftResult.reason);
             }
         };
 

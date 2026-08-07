@@ -3,9 +3,22 @@ import type { ChartDraftDto, ProjectDto, TableDraftDto } from "../types/project-
 import type { ChartConfig } from "../types/chart";
 import type { AbntTableConfig } from "../types/table";
 import { apiRequest } from "./api-client";
+import { logClientError } from "./client-logger";
+import {
+    getPendingProjects,
+    mergeProjectsWithPendingProjects,
+    removePendingProject,
+    savePendingProject,
+} from "./local-project-cache";
 
 type ApiProjectDto = SharedProjectDto<Record<string, unknown>>;
 type ApiDraftDto = SharedDraftDto<Record<string, unknown>>;
+
+export interface SaveProjectResult {
+    message?: string;
+    persistedIn: "api" | "local";
+    project: ProjectDto;
+}
 
 const toProjectDto = (project: ApiProjectDto): ProjectDto => {
     if (project.type === "chart") {
@@ -49,6 +62,49 @@ const toApiProjectPayload = (project: ProjectDto) => {
     };
 };
 
+const getProjectWithFreshTimestamp = (project: ProjectDto): ProjectDto => ({
+    ...project,
+    updatedAt: new Date().toISOString(),
+});
+
+const saveProjectToRemote = async (project: ProjectDto) => {
+    const savedProject = await apiRequest<ApiProjectDto>(`/projects/${project.id}`, {
+        body: JSON.stringify(toApiProjectPayload(project)),
+        method: "PUT",
+    });
+
+    return toProjectDto(savedProject);
+};
+
+const getSaveFailureMessage = (error: unknown) => {
+    if (error instanceof Error && error.message) {
+        return error.message;
+    }
+
+    return "Falha ao comunicar com a API.";
+};
+
+const syncPendingProjects = async () => {
+    const pendingProjects = getPendingProjects();
+    const syncedProjects: ProjectDto[] = [];
+
+    for (const project of pendingProjects) {
+        try {
+            const savedProject = await saveProjectToRemote(project);
+
+            removePendingProject(project.id);
+            syncedProjects.push(savedProject);
+        } catch (error) {
+            logClientError("project-sync-pending", error, {
+                projectId: project.id,
+                projectType: project.type,
+            });
+        }
+    }
+
+    return syncedProjects;
+};
+
 const toChartDraftDto = (draft: ApiDraftDto): ChartDraftDto => {
     return {
         id: draft.id,
@@ -72,18 +128,54 @@ const toTableDraftDto = (draft: ApiDraftDto): TableDraftDto => {
 };
 
 export const fetchProjects = async () => {
-    const projects = await apiRequest<ApiProjectDto[]>("/projects");
+    try {
+        await syncPendingProjects();
 
-    return projects.map(toProjectDto);
+        const projects = await apiRequest<ApiProjectDto[]>("/projects");
+
+        return mergeProjectsWithPendingProjects(projects.map(toProjectDto));
+    } catch (error) {
+        logClientError("project-fetch", error);
+
+        return mergeProjectsWithPendingProjects([]);
+    }
 };
 
-export const saveProjectToApi = async (project: ProjectDto) => {
-    const savedProject = await apiRequest<ApiProjectDto>(`/projects/${project.id}`, {
-        body: JSON.stringify(toApiProjectPayload(project)),
-        method: "PUT",
-    });
+export const saveProjectToApi = async (
+    project: ProjectDto,
+): Promise<SaveProjectResult> => {
+    const projectToSave = getProjectWithFreshTimestamp(project);
 
-    return toProjectDto(savedProject);
+    try {
+        const savedProject = await saveProjectToRemote(projectToSave);
+
+        removePendingProject(project.id);
+
+        return {
+            persistedIn: "api",
+            project: savedProject,
+        };
+    } catch (error) {
+        const message = getSaveFailureMessage(error);
+        const savedLocally = savePendingProject(projectToSave, message);
+
+        logClientError("project-save-fallback", error, {
+            fallback: savedLocally ? "local" : "failed",
+            projectId: project.id,
+            projectType: project.type,
+        });
+
+        if (savedLocally) {
+            return {
+                message:
+                    "Salvo neste dispositivo. A sincronização será feita quando a API voltar.",
+                persistedIn: "local",
+                project: projectToSave,
+            };
+        }
+
+        throw error;
+    }
 };
 
 export const deleteProjectFromApi = (projectId: string) => {

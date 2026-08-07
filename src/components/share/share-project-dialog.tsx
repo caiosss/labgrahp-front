@@ -19,24 +19,6 @@ interface ShareProjectDialogProps {
 }
 
 const getApplicationBaseUrl = () => {
-    const environmentUrl = import.meta.env.VITE_ENVIRONMENT_URL as
-        | string
-        | undefined;
-
-    if (environmentUrl) {
-        const normalizedUrl = environmentUrl.replace(/\/$/, "");
-
-        if (normalizedUrl.startsWith("http://") || normalizedUrl.startsWith("https://")) {
-            return normalizedUrl;
-        }
-
-        if (normalizedUrl.startsWith("localhost")) {
-            return `http://${normalizedUrl}`;
-        }
-
-        return `https://${normalizedUrl}`;
-    }
-
     return window.location.origin;
 };
 
@@ -82,14 +64,14 @@ export const ShareProjectDialog = ({
             setShareLink("");
 
             try {
-                const ensuredProjectId =
-                    projectIdRef.current ?? (await onEnsureSavedRef.current());
+                const ensuredProjectId = await onEnsureSavedRef.current();
+                const targetProjectId = ensuredProjectId ?? projectIdRef.current;
 
-                if (!ensuredProjectId) {
+                if (!targetProjectId) {
                     throw new Error("Projeto não salvo.");
                 }
 
-                const share = await createProjectShare(ensuredProjectId);
+                const share = await createProjectShare(targetProjectId);
                 const baseUrl = getApplicationBaseUrl();
 
                 if (!share.token) {

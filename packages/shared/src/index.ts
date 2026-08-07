@@ -34,3 +34,19 @@ export interface SharedProjectShareDto<TData = Record<string, unknown>> {
   expiresAt?: string;
   project: SharedProjectDto<TData>;
 }
+
+export interface IntegrationEvent<TPayload = Record<string, unknown>> {
+  id: string;
+  name: IntegrationEventName;
+  occurredAt: string;
+  producer: "identity-service" | "project-service";
+  version: 1;
+  payload: TPayload;
+}
+
+export type IntegrationEventName =
+  | "identity.user.registered.v1"
+  | "project.created.v1"
+  | "project.deleted.v1"
+  | "project.updated.v1"
+  | "project.share.created.v1";

@@ -1,0 +1,27 @@
+{
+  "name": "@labgraph/identity-service",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch --env-file-if-exists=.env.local src/main.mjs",
+    "start": "node src/main.mjs",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "dotenv -e .env.local -- prisma migrate dev",
+    "prisma:deploy": "prisma migrate deploy",
+    "prisma:studio": "dotenv -e .env.local -- prisma studio"
+  },
+  "dependencies": {
+    "@node-rs/argon2": "^2.0.2",
+    "@prisma/client": "^6.16.3",
+    "cookie-parser": "^1.4.7",
+    "express": "^5.2.1",
+    "jose": "^6.2.8",
+    "pg": "^8.22.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "dotenv-cli": "^11.0.0",
+    "prisma": "^6.16.3"
+  }
+}

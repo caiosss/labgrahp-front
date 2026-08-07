@@ -4,6 +4,7 @@ import {
     getStoredSessionToken,
     setStoredSessionToken,
 } from "./session-storage";
+import { logClientError } from "./client-logger";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL ?? "";
 
@@ -27,15 +28,29 @@ const buildApiUrl = (path: string) => {
 };
 
 const createAnonymousSession = async () => {
-    const response = await fetch(buildApiUrl("/sessions"), {
-        headers: {
-            "Content-Type": "application/json",
-        },
-        method: "POST",
-    });
+    let response: Response;
+
+    try {
+        response = await fetch(buildApiUrl("/sessions"), {
+            headers: {
+                "Content-Type": "application/json",
+            },
+            method: "POST",
+        });
+    } catch (error) {
+        logClientError("api-create-session-network", error);
+
+        throw error;
+    }
 
     if (!response.ok) {
-        throw new ApiError("Não foi possível criar a sessão anônima.", response.status);
+        const error = new ApiError("Não foi possível criar a sessão anônima.", response.status);
+
+        logClientError("api-create-session", error, {
+            status: response.status,
+        });
+
+        throw error;
     }
 
     return response.json() as Promise<SharedSessionDto>;
@@ -59,27 +74,64 @@ export const apiRequest = async <T>(
     options: ApiRequestOptions = {},
 ): Promise<T> => {
     const headers = new Headers(options.headers);
+    const isAuthenticated = options.authenticated !== false;
+    const method = options.method ?? "GET";
 
     if (!headers.has("Content-Type")) {
         headers.set("Content-Type", "application/json");
     }
 
-    if (options.authenticated !== false) {
+    if (isAuthenticated) {
         const token = await getSessionToken();
         headers.set("Authorization", `Bearer ${token}`);
     }
 
-    const response = await fetch(buildApiUrl(path), {
-        ...options,
-        headers,
-    });
+    const runRequest = () =>
+        fetch(buildApiUrl(path), {
+            ...options,
+            headers,
+        });
 
-    if (response.status === 401) {
+    let response: Response;
+
+    try {
+        response = await runRequest();
+    } catch (error) {
+        logClientError("api-request-network", error, {
+            method,
+            path,
+        });
+
+        throw error;
+    }
+
+    if (response.status === 401 && isAuthenticated) {
         clearStoredSessionToken();
+
+        try {
+            const token = await getSessionToken();
+            headers.set("Authorization", `Bearer ${token}`);
+            response = await runRequest();
+        } catch (error) {
+            logClientError("api-request-session-retry", error, {
+                method,
+                path,
+            });
+
+            throw error;
+        }
     }
 
     if (!response.ok) {
-        throw new ApiError("A API não conseguiu processar a solicitação.", response.status);
+        const error = new ApiError("A API não conseguiu processar a solicitação.", response.status);
+
+        logClientError("api-request-error", error, {
+            method,
+            path,
+            status: response.status,
+        });
+
+        throw error;
     }
 
     if (response.status === 204) {

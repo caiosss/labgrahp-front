@@ -23,9 +23,13 @@ export const TableEditorPage = ({ onBack, projectId }: TableEditorPageProps) => 
     const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
 
     const ensureProjectSaved = useCallback(async () => {
-        const savedProject = await editor.saveProject();
+        const saveResult = await editor.saveProject();
 
-        return savedProject?.id;
+        if (saveResult.persistedIn === "local") {
+            throw new Error("O projeto foi salvo apenas neste dispositivo.");
+        }
+
+        return saveResult.project.id;
     }, [editor]);
 
     const handleClearTable = () => {

@@ -1,0 +1,135 @@
+name: labgraph
+
+services:
+  api-gateway:
+    build:
+      context: ./apps/api-gateway
+    environment:
+      PORT: 3000
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
+      PROJECT_SERVICE_URL: http://project-service:3333
+      IDENTITY_SERVICE_URL: http://identity-service:3334
+    ports:
+      - "3000:3000"
+    depends_on:
+      project-service:
+        condition: service_healthy
+      identity-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--spider", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  project-service:
+    build:
+      context: ./apps/api
+    environment:
+      PORT: 3333
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
+      DATABASE_URL: postgresql://labgraph:labgraph@project-db:5432/labgraph_projects?schema=public
+      KAFKA_BROKERS: kafka:29092
+      KAFKA_CLIENT_ID: project-service
+    command: ["sh", "-c", "npm run prisma:deploy && npm run start:prod"]
+    depends_on:
+      project-db:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    healthcheck:
+      test:
+        ["CMD", "node", "-e", "fetch('http://localhost:3333/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 20s
+    restart: unless-stopped
+
+  identity-service:
+    build:
+      context: ./apps/identity-service
+    environment:
+      PORT: 3334
+      IDENTITY_DATABASE_URL: postgresql://labgraph:labgraph@identity-db:5432/labgraph_identity?schema=public
+      KAFKA_BROKERS: kafka:29092
+      KAFKA_CLIENT_ID: identity-service
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL:-http://localhost:3000/auth/google/callback}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-local-development-only-change-me}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-local-development-only-change-me-too}
+    depends_on:
+      identity-db:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    healthcheck:
+      test:
+        ["CMD", "node", "-e", "fetch('http://localhost:3334/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  project-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: labgraph_projects
+      POSTGRES_USER: labgraph
+      POSTGRES_PASSWORD: labgraph
+    ports:
+      - "5432:5432"
+    volumes:
+      - project-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U labgraph -d labgraph_projects"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  identity-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: labgraph_identity
+      POSTGRES_USER: labgraph
+      POSTGRES_PASSWORD: labgraph
+    ports:
+      - "5433:5432"
+    volumes:
+      - identity-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U labgraph -d labgraph_identity"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  kafka:
+    image: apache/kafka:4.2.0
+    environment:
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:29092,CONTROLLER://:29093,PLAINTEXT_HOST://:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_NUM_PARTITIONS: 3
+    ports:
+      - "9092:9092"
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    restart: unless-stopped
+
+volumes:
+  project-db-data:
+  identity-db-data:
+  kafka-data:

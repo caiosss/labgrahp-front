@@ -1,12 +1,18 @@
 import { ArrowLeft, Eraser, HelpCircle, Save, Share2 } from "lucide-react";
 import { useState } from "react";
+import { logClientError } from "../../services/client-logger";
 import { Button } from "../ui/button";
+
+interface SaveActionResult {
+    message?: string;
+    persistedIn?: "api" | "local";
+}
 
 interface EditorPageHeaderProps {
     title: string;
     description: string;
     onBack: () => void;
-    onSave: () => void | Promise<unknown>;
+    onSave: () => void | SaveActionResult | Promise<void | SaveActionResult>;
     onShare?: () => void;
     onClear?: () => void;
     onStartTour?: () => void;
@@ -31,6 +37,9 @@ export const EditorPageHeader = ({
 }: EditorPageHeaderProps) => {
     const [isSaving, setIsSaving] = useState(false);
     const [saveError, setSaveError] = useState<string | undefined>();
+    const [saveNotice, setSaveNotice] = useState<
+        { message: string; type: "success" | "warning" } | undefined
+    >();
     const savedLabel = lastSavedAt
         ? `Salvo às ${new Date(lastSavedAt).toLocaleTimeString("pt-BR", {
             hour: "2-digit",
@@ -47,12 +56,31 @@ export const EditorPageHeader = ({
     const handleSave = async () => {
         setIsSaving(true);
         setSaveError(undefined);
+        setSaveNotice(undefined);
 
         try {
-            await onSave();
+            const saveResult = await onSave();
+
+            if (saveResult?.persistedIn === "local") {
+                setSaveNotice({
+                    message:
+                        saveResult.message ??
+                        "Salvo neste dispositivo. Vamos sincronizar quando a API voltar.",
+                    type: "warning",
+                });
+            } else {
+                setSaveNotice({
+                    message: "Projeto salvo com sucesso.",
+                    type: "success",
+                });
+            }
         } catch (error) {
-            console.warn("Não foi possível salvar o projeto.", error);
-            setSaveError("Não foi possível salvar agora.");
+            logClientError("editor-save", error, {
+                title,
+            });
+            setSaveError(
+                "Não foi possível salvar agora. Verifique sua conexão e tente novamente.",
+            );
         } finally {
             setIsSaving(false);
         }
@@ -108,6 +136,17 @@ export const EditorPageHeader = ({
                 </div>
 
                 <span className="text-xs text-slate-500">{savedLabel}</span>
+                {saveNotice && (
+                    <span
+                        className={
+                            saveNotice.type === "warning"
+                                ? "text-xs text-amber-600"
+                                : "text-xs text-emerald-600"
+                        }
+                    >
+                        {saveNotice.message}
+                    </span>
+                )}
                 {saveError && (
                     <span className="text-xs text-red-600">{saveError}</span>
                 )}

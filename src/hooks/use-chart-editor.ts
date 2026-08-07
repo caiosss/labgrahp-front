@@ -274,13 +274,14 @@ export const useChartEditor = (projectId?: string) => {
             ? getProjectById(currentProjectId)
             : undefined;
         const projectDto = createChartProjectDto(chart, currentProject);
-        const savedProject = await saveProjectToApi(projectDto);
+        const saveResult = await saveProjectToApi(projectDto);
+        const savedProject = saveResult.project;
 
         upsertProject(savedProject);
         setCurrentProjectId(savedProject.id);
         setLastSavedAt(savedProject.updatedAt);
 
-        return savedProject;
+        return saveResult;
     };
 
     const clearChart = () => {

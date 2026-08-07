@@ -192,13 +192,14 @@ export const useTableEditor = (projectId?: string) => {
             ? getProjectById(currentProjectId)
             : undefined;
         const projectDto = createTableProjectDto(table, currentProject);
-        const savedProject = await saveProjectToApi(projectDto);
+        const saveResult = await saveProjectToApi(projectDto);
+        const savedProject = saveResult.project;
 
         upsertProject(savedProject);
         setCurrentProjectId(savedProject.id);
         setLastSavedAt(savedProject.updatedAt);
 
-        return savedProject;
+        return saveResult;
     };
 
     const clearTable = () => {
