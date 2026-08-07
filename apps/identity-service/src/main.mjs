@@ -40,7 +40,7 @@ const notImplemented = (request, response) => {
 
 
 app.use("/auth", authRouter);
-app.post("/auth/login", notImplemented);
+app.use("/auth", authRouter);
 app.get("/auth/google", notImplemented);
 app.get("/auth/google/callback", notImplemented);
 app.post("/auth/refresh", notImplemented);
