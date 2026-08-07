@@ -1,6 +1,7 @@
 import { CircleAlert, CircleCheck, LoaderCircle } from "lucide-react";
 import { useEffect, useState } from "react";
-import { refreshAccessToken, type AuthenticatedUser } from "../services/identity-auth-api";
+import { useAuth } from "../hooks/use-auth";
+import type { AuthenticatedUser } from "../services/identity-auth-api";
 
 type CallbackState =
   | { status: "loading" }
@@ -9,6 +10,7 @@ type CallbackState =
 
 export function AuthCallbackPage() {
   const [state, setState] = useState<CallbackState>({ status: "loading" });
+  const { refreshSession } = useAuth();
 
   useEffect(() => {
     let active = true;
@@ -26,7 +28,7 @@ export function AuthCallbackPage() {
       }
 
       try {
-        const session = await refreshAccessToken();
+        const session = await refreshSession();
 
         if (!active) return;
 
@@ -53,7 +55,7 @@ export function AuthCallbackPage() {
       active = false;
       if (redirectTimer) window.clearTimeout(redirectTimer);
     };
-  }, []);
+  }, [refreshSession]);
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4">

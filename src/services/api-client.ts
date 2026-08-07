@@ -1,3 +1,5 @@
+import { getStoredAccessToken } from "./auth-session-storage";
+import { refreshAccessToken } from "./identity-auth-api";
 import type { SharedSessionDto } from "../../packages/shared/src";
 import {
     clearStoredSessionToken,
@@ -6,9 +8,16 @@ import {
 } from "./session-storage";
 import { logClientError } from "./client-logger";
 
+
 const API_BASE_URL = import.meta.env.VITE_API_URL ?? "";
 
+export type AuthenticationMode =
+    | "anonymous"
+    | "identity"
+    | "none";
+
 interface ApiRequestOptions extends RequestInit {
+    authentication?: AuthenticationMode;
     authenticated?: boolean;
 }
 
@@ -69,26 +78,71 @@ export const getSessionToken = async () => {
     return session.token;
 };
 
+const resolveAuthenticationMode = (
+    options: ApiRequestOptions,
+): AuthenticationMode => {
+    if (options.authentication) {
+        return options.authentication;
+    }
+
+    if (options.authenticated === false) {
+        return "none";
+    }
+
+    return "anonymous";
+};
+
+const getAuthenticationToken = async (
+    mode: AuthenticationMode,
+): Promise<string | null> => {
+    if (mode === "none") {
+        return null;
+    }
+
+    if (mode === "anonymous") {
+        return getSessionToken();
+    }
+
+    const storedAccessToken = getStoredAccessToken();
+
+    if (storedAccessToken) {
+        return storedAccessToken;
+    }
+
+    const session = await refreshAccessToken();
+    return session.accessToken;
+};
+
 export const apiRequest = async <T>(
     path: string,
     options: ApiRequestOptions = {},
 ): Promise<T> => {
-    const headers = new Headers(options.headers);
-    const isAuthenticated = options.authenticated !== false;
-    const method = options.method ?? "GET";
+    const requestOptions = { ...options };
+
+    delete requestOptions.authentication;
+    delete requestOptions.authenticated;
+
+    const headers = new Headers(requestOptions.headers);
+    const authenticationMode =
+        resolveAuthenticationMode(options);
+
+    const method = requestOptions.method ?? "GET";
 
     if (!headers.has("Content-Type")) {
         headers.set("Content-Type", "application/json");
     }
 
-    if (isAuthenticated) {
-        const token = await getSessionToken();
+    const token = await getAuthenticationToken(
+        authenticationMode,
+    );
+
+    if (token) {
         headers.set("Authorization", `Bearer ${token}`);
     }
 
     const runRequest = () =>
         fetch(buildApiUrl(path), {
-            ...options,
+            ...requestOptions,
             headers,
         });
 
@@ -105,18 +159,48 @@ export const apiRequest = async <T>(
         throw error;
     }
 
-    if (response.status === 401 && isAuthenticated) {
+    if (response.status === 401 && authenticationMode === "anonymous") {
         clearStoredSessionToken();
 
         try {
-            const token = await getSessionToken();
-            headers.set("Authorization", `Bearer ${token}`);
+            const newAnonymousToken = await getSessionToken();
+
+            headers.set(
+                "Authorization",
+                `Bearer ${newAnonymousToken}`,
+            );
+
             response = await runRequest();
         } catch (error) {
-            logClientError("api-request-session-retry", error, {
-                method,
-                path,
-            });
+            logClientError(
+                "api-request-anonymous-session-retry",
+                error,
+                { method, path },
+            );
+
+            throw error;
+        }
+    }
+
+    if (
+        response.status === 401 &&
+        authenticationMode === "identity"
+    ) {
+        try {
+            const session = await refreshAccessToken();
+
+            headers.set(
+                "Authorization",
+                `Bearer ${session.accessToken}`,
+            );
+
+            response = await runRequest();
+        } catch (error) {
+            logClientError(
+                "api-request-identity-session-retry",
+                error,
+                { method, path },
+            );
 
             throw error;
         }
@@ -140,3 +224,4 @@ export const apiRequest = async <T>(
 
     return response.json() as Promise<T>;
 };
+
