@@ -79,13 +79,7 @@ export const loginUser = async ({ email, password }, sessionContext) => {
     },
   });
 
-  return {
-    accessToken,
-    expiresIn: ACCESS_TOKEN_EXPIRES_IN_SECONDS,
-    refreshToken,
-    tokenType: "Bearer",
-    user: { id: user.id, email: user.email, name: user.name },
-  };
+  return createUserSession(user, sessionContext);
 };
 
 export const rotateRefreshToken = async (currentToken, sessionContext) => {
@@ -168,4 +162,31 @@ export const getCurrentUser = async (userId) => {
 
   if (!user) throw new UserNotFoundError();
   return user;
+};
+
+export const createUserSession = async (user, sessionContext) => {
+  const accessToken = await createAccessToken(user.id);
+  const refreshToken = createRefreshToken();
+
+  await prisma.refreshSession.create({
+    data: {
+      expiresAt: getRefreshTokenExpiration(),
+      ipAddress: sessionContext.ipAddress,
+      tokenHash: hashRefreshToken(refreshToken),
+      userAgent: sessionContext.userAgent,
+      userId: user.id,
+    },
+  });
+
+  return {
+    accessToken,
+    expiresIn: ACCESS_TOKEN_EXPIRES_IN_SECONDS,
+    refreshToken,
+    tokenType: "Bearer",
+    user: {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+    },
+  };
 };

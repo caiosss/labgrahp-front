@@ -14,27 +14,12 @@ import {
   registerUser,
   rotateRefreshToken,
 } from "./auth.service.mjs";
+import { setRefreshCookie, getRefreshCookieOptions } from "./auth-cookies.mjs";
 
 const getSessionContext = (request) => ({
   ipAddress: request.ip,
   userAgent: request.get("user-agent"),
 });
-
-const getRefreshCookieOptions = () => ({
-  httpOnly: true,
-  maxAge: REFRESH_TOKEN_EXPIRES_IN_SECONDS * 1000,
-  path: "/auth",
-  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-  secure: process.env.NODE_ENV === "production",
-});
-
-const setRefreshCookie = (response, refreshToken) => {
-  response.cookie(
-    REFRESH_TOKEN_COOKIE_NAME,
-    refreshToken,
-    getRefreshCookieOptions(),
-  );
-};
 
 const clearRefreshCookie = (response) => {
   const { maxAge: _maxAge, ...options } = getRefreshCookieOptions();

@@ -85,13 +85,28 @@ createServer(async (request, response) => {
       body,
       headers,
       method: request.method,
+      // O navegador, não o proxy, deve seguir redirects como o do OAuth.
+      redirect: "manual",
     });
 
     upstreamResponse.headers.forEach((value, name) => {
-      if (!["content-encoding", "content-length", "transfer-encoding"].includes(name)) {
+      if (
+        ![
+          "content-encoding",
+          "content-length",
+          "set-cookie",
+          "transfer-encoding",
+        ].includes(name)
+      ) {
         response.setHeader(name, value);
       }
     });
+
+    const setCookieHeaders = upstreamResponse.headers.getSetCookie();
+    if (setCookieHeaders.length > 0) {
+      response.setHeader("set-cookie", setCookieHeaders);
+    }
+
     setCorsHeaders(request, response);
     response.writeHead(upstreamResponse.status);
     response.end(Buffer.from(await upstreamResponse.arrayBuffer()));

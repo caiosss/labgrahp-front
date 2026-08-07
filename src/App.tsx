@@ -10,6 +10,7 @@ import { useAppTheme } from "./hooks/use-app-theme";
 import { fetchSharedProject } from "./services/share-api";
 import { useProjectStore } from "./store/project-store";
 import { createRandomUUID } from "./utils/create-random-uuid";
+import { AuthCallbackPage } from "./pages/auth-callback";
 
 
 
@@ -23,6 +24,7 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>({ type: "home" });
   const appTheme = useAppTheme();
   const upsertProject = useProjectStore((state) => state.upsertProject);
+  const isAuthCallback = window.location.pathname === "/auth/callback";
 
   useEffect(() => {
     const shareMatch = window.location.pathname.match(/^\/share\/([^/]+)$/);
@@ -76,6 +78,10 @@ export default function App() {
       projectId: project.id,
     });
   };
+
+  if (isAuthCallback) {
+    return <AuthCallbackPage />;
+  }
 
   if (screen.type === "shared-loading") {
     return (
