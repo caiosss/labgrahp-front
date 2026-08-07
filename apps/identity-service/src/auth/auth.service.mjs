@@ -7,6 +7,7 @@ import {
 
 export class EmailIsRegisteredError extends Error {}
 export class InvalidCredentialsError extends Error {}
+export class UserNotFoundError extends Error {}
 
 export const registerUser = async ({ name, email, password }) => {
     const normalizedEmail = email.trim().toLowerCase();
@@ -56,6 +57,10 @@ export const loginUser = async ({ email, password }) => {
             passwordHash: true,
         },
     });
+
+    if (!user) {
+        throw new UserNotFoundError("Usuário não encontrado.");
+    }
 
     if (!user?.passwordHash) {
         throw new InvalidCredentialsError("Crendenciais inválidas.");
