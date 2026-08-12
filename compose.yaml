@@ -30,6 +30,7 @@ services:
       PORT: 3333
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
       DATABASE_URL: postgresql://labgraph:labgraph@project-db:5432/labgraph_projects?schema=public
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-local-development-only-change-me}
       KAFKA_BROKERS: kafka:29092
       KAFKA_CLIENT_ID: project-service
     command: ["sh", "-c", "npm run prisma:deploy && npm run start:prod"]
@@ -81,7 +82,8 @@ services:
       POSTGRES_USER: labgraph
       POSTGRES_PASSWORD: labgraph
     ports:
-      - "5432:5432"
+      # 5432 já pode estar ocupado por um PostgreSQL nativo no Windows.
+      - "5436:5432"
     volumes:
       - project-db-data:/var/lib/postgresql/data
     healthcheck:
