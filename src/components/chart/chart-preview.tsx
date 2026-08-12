@@ -1,6 +1,7 @@
 import createPlotlyComponent from "react-plotly.js/factory";
 import Plotly from "plotly.js-dist-min";
 import type { Data } from "plotly.js";
+import { useEffect, useState } from "react";
 import type { ChartConfig } from "../../types/chart";
 import {
     buildLinePoints,
@@ -28,6 +29,16 @@ interface ChartPreviewProps {
 }
 
 export const ChartPreview = ({ chart, onReady }: ChartPreviewProps) => {
+    const [isCompact, setIsCompact] = useState(() => window.innerWidth < 640);
+
+    useEffect(() => {
+        const mediaQuery = window.matchMedia("(max-width: 639px)");
+        const updateCompactMode = () => setIsCompact(mediaQuery.matches);
+        updateCompactMode();
+        mediaQuery.addEventListener("change", updateCompactMode);
+        return () => mediaQuery.removeEventListener("change", updateCompactMode);
+    }, []);
+
     const xTitle = chart.xAxis.unit
         ? `${chart.xAxis.label} (${chart.xAxis.unit})`
         : chart.xAxis.label;
@@ -52,10 +63,12 @@ export const ChartPreview = ({ chart, onReady }: ChartPreviewProps) => {
         chart.yAxis.tickMode === "custom"
             ? parseTickValues(chart.yAxis.tickValues)
             : undefined;
-    const titleFontSize = Number(chart.appearance.titleFontSize) || 18;
-    const axisTitleFontSize = Number(chart.appearance.axisTitleFontSize) || 14;
-    const tickFontSize = Number(chart.appearance.tickFontSize) || 12;
-    const legendFontSize = Number(chart.appearance.legendFontSize) || 12;
+    const titleFontSize = Math.min(Number(chart.appearance.titleFontSize) || 18, isCompact ? 16 : 30);
+    const axisTitleFontSize = Math.min(Number(chart.appearance.axisTitleFontSize) || 14, isCompact ? 12 : 24);
+    const tickFontSize = Math.min(Number(chart.appearance.tickFontSize) || 12, isCompact ? 10 : 20);
+    const legendFontSize = Math.min(Number(chart.appearance.legendFontSize) || 12, isCompact ? 10 : 20);
+    const configuredHeight = Number(chart.appearance.height) || 560;
+    const previewHeight = isCompact ? Math.min(configuredHeight, 380) : configuredHeight;
     const allValidPoints = chart.series.flatMap((serie) =>
         getValidPoints(serie.points),
     );
@@ -212,8 +225,8 @@ export const ChartPreview = ({ chart, onReady }: ChartPreviewProps) => {
             <div
                 className="flex min-h-[360px] items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50 p-6 text-center"
                 style={{
-                    height: `${Number(chart.appearance.height) || 560}px`,
-                    maxHeight: "70vh",
+                    height: `${previewHeight}px`,
+                    maxHeight: isCompact ? "55vh" : "70vh",
                 }}
             >
                 <div>
@@ -233,6 +246,7 @@ export const ChartPreview = ({ chart, onReady }: ChartPreviewProps) => {
             data={plotSeries}
             layout={{
                 autosize: true,
+                dragmode: isCompact ? false : "zoom",
                 title: {
                     text: chart.title || "Título do gráfico",
                     font: {
@@ -258,6 +272,7 @@ export const ChartPreview = ({ chart, onReady }: ChartPreviewProps) => {
                     },
                     showgrid: chart.showGrid,
                     zeroline: false,
+                    automargin: true,
                     range: xRange,
                     tickmode: chart.xAxis.tickMode === "custom" ? "array" : "linear",
                     tickvals: xTickValues,
@@ -278,6 +293,7 @@ export const ChartPreview = ({ chart, onReady }: ChartPreviewProps) => {
                     },
                     showgrid: chart.showGrid,
                     zeroline: false,
+                    automargin: true,
                     range: yRange,
                     tickmode: chart.yAxis.tickMode === "custom" ? "array" : "linear",
                     tickvals: yTickValues,
@@ -291,17 +307,22 @@ export const ChartPreview = ({ chart, onReady }: ChartPreviewProps) => {
                     font: {
                         size: legendFontSize,
                     },
+                    orientation: isCompact ? "h" : "v",
+                    x: isCompact ? 0 : undefined,
+                    y: isCompact ? -0.24 : undefined,
                 },
                 margin: {
-                    l: 64,
-                    r: 24,
-                    t: 72,
-                    b: 64,
+                    l: isCompact ? 46 : 64,
+                    r: isCompact ? 10 : 24,
+                    t: isCompact ? 56 : 72,
+                    b: isCompact && chart.showLegend ? 94 : 64,
                 },
             }}
             config={{
                 responsive: true,
                 displaylogo: false,
+                displayModeBar: !isCompact,
+                scrollZoom: false,
                 toImageButtonOptions: {
                     format: "png",
                     filename: "grafico",
@@ -319,9 +340,9 @@ export const ChartPreview = ({ chart, onReady }: ChartPreviewProps) => {
             useResizeHandler
             style={{
                 width: "100%",
-                height: `${Number(chart.appearance.height) || 560}px`,
-                maxHeight: "70vh",
-                minHeight: "360px",
+                height: `${previewHeight}px`,
+                maxHeight: isCompact ? "58vh" : "70vh",
+                minHeight: isCompact ? "300px" : "360px",
             }}
         />
     );

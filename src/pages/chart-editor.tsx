@@ -45,7 +45,7 @@ export const ChartEditorPage = ({ onBack, projectId }: ChartEditorPageProps) => 
     };
 
     return (
-        <main className="min-h-screen bg-slate-50 px-3 py-4 sm:px-6 sm:py-6">
+        <main className="min-h-screen overflow-x-hidden bg-slate-50 px-2 py-4 sm:px-6 sm:py-6 md:pt-20">
             <div className="mx-auto max-w-7xl space-y-6">
                 <div data-tour="chart-editor-header">
                     <EditorPageHeader
@@ -63,7 +63,7 @@ export const ChartEditorPage = ({ onBack, projectId }: ChartEditorPageProps) => 
                 </div>
 
                 <div className="grid min-w-0 grid-cols-1 gap-4 lg:gap-6 xl:grid-cols-[minmax(360px,520px)_minmax(0,1fr)]">
-                    <section className="min-w-0 space-y-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:rounded-2xl sm:p-5">
+                    <section className="min-w-0 space-y-6 rounded-xl border border-slate-200 bg-white p-3 shadow-sm sm:rounded-2xl sm:p-5">
                         <ChartEditorGuide />
 
                         <ChartBasicSettings

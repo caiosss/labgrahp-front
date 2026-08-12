@@ -1,9 +1,16 @@
-import { Controller, Get, Inject, Post, UseGuards } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Inject,
+  Post,
+  UseGuards,
+} from "@nestjs/common";
 import { CurrentSession } from "../../common/decorators/current-session.decorator";
 import { SessionTokenGuard } from "../../common/guards/session-token.guard";
 import type { RequestSession } from "../../common/types/request-with-session";
 import { SessionsService } from "./sessions.service";
-import { Body } from "@nestjs/common";
 import { CurrentIdentity } from "../../common/identity-auth/current-identity.decorator";
 import { IdentityTokenGuard } from "../../common/identity-auth/identity-token.guard";
 import type { RequestIdentity } from "../../common/types/request-with-identity";
@@ -28,6 +35,7 @@ export class SessionsController {
   }
 
   @Post("claim-projects")
+  @HttpCode(200)
   @UseGuards(IdentityTokenGuard)
   claimProjects(
     @CurrentIdentity() identity: RequestIdentity,

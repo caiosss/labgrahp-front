@@ -40,8 +40,10 @@ npm run docker:down
 ```
 
 O frontend continua fora do Compose para manter o hot reload do Vite. Execute
-`npm run dev:web` em outro terminal. Use `docker compose down -v` somente quando
-quiser apagar deliberadamente os bancos e os dados locais do Kafka.
+`npm run dev:web` em outro terminal. O comando `npm run docker:down` preserva os
+volumes. Não use a opção `-v` em ambientes com dados importantes: ela remove
+deliberadamente os bancos locais e os dados do Kafka e não faz parte de nenhum
+build ou deploy do projeto.
 
 ### Sem Docker
 

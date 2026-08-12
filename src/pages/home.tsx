@@ -75,10 +75,10 @@ export const HomePage = ({
     }, [setChartDraft, setProjects, setTableDraft]);
 
     return (
-        <main className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 sm:py-10">
+        <main className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 sm:py-10 md:pt-20">
             <div className="mx-auto max-w-6xl space-y-8 sm:space-y-10">
                 <header className="flex flex-col gap-4 pr-12 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-start gap-4 sm:items-center">
                         <img
                             alt="LabGraph"
                             className="h-16 w-16 rounded-2xl object-cover shadow-sm ring-1 ring-slate-200 sm:h-20 sm:w-20"

@@ -7,10 +7,12 @@ import {
   loginWithPassword,
   logoutCurrentSession,
   refreshAccessToken,
+  registerAccount,
   subscribeToAuthSession,
   type AuthenticatedUser,
   type AuthSession,
   type LoginCredentials,
+  type RegisterDetails,
 } from "../services/identity-auth-api";
 import {
   clearStoredAccessToken,
@@ -80,6 +82,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
     async (credentials: LoginCredentials) => {
       const session =
         await loginWithPassword(credentials);
+
+      return claimProjectsForSession(session);
+    },
+    [claimProjectsForSession],
+  );
+
+  const register = useCallback(
+    async (details: RegisterDetails) => {
+      await registerAccount(details);
+      const session = await loginWithPassword({
+        email: details.email,
+        password: details.password,
+      });
 
       return claimProjectsForSession(session);
     },
@@ -171,6 +186,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       loginWithGoogle,
       logout,
       refreshSession,
+      register,
       claimProjectsForSession,
       user,
     }),
@@ -181,6 +197,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       loginWithGoogle,
       logout,
       refreshSession,
+      register,
       claimProjectsForSession,
       user,
     ],

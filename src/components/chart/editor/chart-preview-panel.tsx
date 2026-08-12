@@ -58,7 +58,7 @@ export const ChartPreviewPanel = ({ chart }: ChartPreviewPanelProps) => {
     return (
         <section
             data-tour="chart-preview"
-            className="min-w-0 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:rounded-2xl sm:p-5"
+            className="min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white p-3 shadow-sm sm:rounded-2xl sm:p-5"
         >
             <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
@@ -138,7 +138,7 @@ export const ChartPreviewPanel = ({ chart }: ChartPreviewPanelProps) => {
                 </div>
             )}
 
-            <div className="min-w-0 overflow-x-auto rounded-xl border border-slate-200 bg-white p-2 sm:p-4">
+            <div className="min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white p-0 sm:p-4">
                 <ChartPreview
                     chart={chart}
                     onReady={(chartElement) => {

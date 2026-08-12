@@ -6,9 +6,10 @@ import { ProjectsModule } from "./modules/projects/projects.module";
 import { SessionsModule } from "./modules/sessions/sessions.module";
 import { SharesModule } from "./modules/shares/shares.module";
 import { AppController } from "./app.controller";
+import { EventsModule } from "./common/events/events.module";
 
 @Module({
-  imports: [SessionsModule, ProjectsModule, DraftsModule, SharesModule],
+  imports: [SessionsModule, ProjectsModule, DraftsModule, SharesModule, EventsModule],
   controllers: [AppController],
   providers: [PrismaService, TokenService],
 })

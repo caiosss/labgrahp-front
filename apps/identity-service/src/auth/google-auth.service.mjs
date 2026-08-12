@@ -1,4 +1,5 @@
 import { prisma } from "../database/prisma.mjs";
+import { createUserRegisteredEvent } from "../events/identity-events.mjs";
 
 export const findOrCreateGoogleUser = async ({
   email,
@@ -40,13 +41,12 @@ export const findOrCreateGoogleUser = async ({
       return transaction.user.update({
         where: { id: existingUser.id },
         data: {
-          emailVerifiedAt:
-            existingUser.emailVerifiedAt ?? new Date(),
+          emailVerifiedAt: existingUser.emailVerifiedAt ?? new Date(),
         },
       });
     }
 
-    return transaction.user.create({
+    const user = await transaction.user.create({
       data: {
         email: email.trim(),
         normalizedEmail,
@@ -60,5 +60,19 @@ export const findOrCreateGoogleUser = async ({
         },
       },
     });
+
+    const event = createUserRegisteredEvent(user);
+
+    await transaction.outboxEvent.create({
+      data: {
+        id: event.id,
+        topic: event.topic,
+        eventType: event.eventType,
+        aggregateId: event.aggregateId,
+        payload: event.payload,
+      },
+    });
+
+    return user;
   });
 };

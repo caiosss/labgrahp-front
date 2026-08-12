@@ -69,14 +69,32 @@ createServer(async (request, response) => {
     for (const [name, value] of Object.entries(request.headers)) {
       if (
         value &&
-        !["host", "content-length", "connection", "expect"].includes(name)
+        ![
+          "connection",
+          "content-length",
+          "expect",
+          "host",
+          "keep-alive",
+          "proxy-authenticate",
+          "proxy-authorization",
+          "te",
+          "trailer",
+          "transfer-encoding",
+          "upgrade",
+        ].includes(name)
       ) {
         headers.set(name, Array.isArray(value) ? value.join(",") : value);
       }
     }
 
     headers.set("x-forwarded-host", request.headers.host ?? "");
-    headers.set("x-forwarded-proto", "http");
+    const forwardedProto = request.headers["x-forwarded-proto"];
+    headers.set(
+      "x-forwarded-proto",
+      Array.isArray(forwardedProto)
+        ? forwardedProto[0]
+        : forwardedProto?.split(",")[0]?.trim() || "http",
+    );
 
     const body = ["GET", "HEAD"].includes(request.method ?? "GET")
       ? undefined
@@ -92,10 +110,17 @@ createServer(async (request, response) => {
     upstreamResponse.headers.forEach((value, name) => {
       if (
         ![
+          "connection",
           "content-encoding",
           "content-length",
+          "keep-alive",
+          "proxy-authenticate",
+          "proxy-authorization",
           "set-cookie",
+          "te",
+          "trailer",
           "transfer-encoding",
+          "upgrade",
         ].includes(name)
       ) {
         response.setHeader(name, value);

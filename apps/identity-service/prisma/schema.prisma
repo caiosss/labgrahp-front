@@ -57,3 +57,18 @@ model RefreshSession {
   @@index([userId])
   @@map("refresh_sessions")
 }
+
+model OutboxEvent {
+  id          String    @id @default(uuid())
+  topic       String
+  eventType   String    @map("event_type")
+  aggregateId String    @map("aggregate_id")
+  payload     Json
+  attempts    Int       @default(0)
+  lastError   String?   @map("last_error")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  publishedAt DateTime? @map("published_at")
+
+  @@index([publishedAt, createdAt])
+  @@map("outbox_events")
+}

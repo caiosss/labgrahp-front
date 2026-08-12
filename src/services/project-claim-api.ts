@@ -1,4 +1,7 @@
-import { getStoredSessionToken } from "./session-storage";
+import {
+    clearStoredSessionToken,
+    getStoredSessionToken,
+} from "./session-storage";
 
 const API_BASE_URL =
     import.meta.env.VITE_API_URL ?? "";
@@ -38,5 +41,11 @@ export const claimAnonymousProjects = async (
         );
     }
 
-    return response.json() as Promise<ClaimProjectsResult>;
+    const result = await response.json() as ClaimProjectsResult;
+
+    // A sessão já foi transferida. No próximo uso anônimo, criamos uma nova
+    // identidade local para não misturar projetos posteriores ao logout.
+    clearStoredSessionToken();
+
+    return result;
 };

@@ -13,7 +13,9 @@ export class IdentityTokenService {
         const secret = process.env.JWT_ACCESS_SECRET;
 
         if (!secret || secret.length < 32) {
-            throw new Error("Deve possui 32 caracteres",);
+            throw new Error(
+                "JWT_ACCESS_SECRET deve ter pelo menos 32 caracteres.",
+            );
         }
 
         return new TextEncoder().encode(secret);

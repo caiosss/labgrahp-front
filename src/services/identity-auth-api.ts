@@ -23,6 +23,10 @@ export interface LoginCredentials {
   password: string;
 }
 
+export interface RegisterDetails extends LoginCredentials {
+  name: string;
+}
+
 export class IdentityAuthError extends Error {
   status: number;
 
@@ -140,6 +144,23 @@ export const loginWithPassword = async (credentials: LoginCredentials) => {
   }
 
   return validateSession((await response.json()) as AuthSession);
+};
+
+export const registerAccount = async (details: RegisterDetails) => {
+  const response = await fetch(`${API_BASE_URL}/auth/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(details),
+  });
+
+  if (!response.ok) {
+    throw new IdentityAuthError(
+      await parseErrorMessage(response, "Não foi possível criar sua conta."),
+      response.status,
+    );
+  }
+
+  return response.json() as Promise<{ user: AuthenticatedUser }>;
 };
 
 export const getCurrentUser = async (accessToken: string) => {

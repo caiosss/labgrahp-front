@@ -9,6 +9,7 @@ import {
   ACCESS_TOKEN_EXPIRES_IN_SECONDS,
   createAccessToken,
 } from "../security/tokens.mjs";
+import { createUserRegisteredEvent } from "../events/identity-events.mjs";
 
 export class EmailIsRegisteredError extends Error {}
 export class InvalidCredentialsError extends Error {}
@@ -28,20 +29,46 @@ export const registerUser = async ({ name, email, password }) => {
 
   const passwordHash = await hashPassword(password);
 
-  return prisma.user.create({
-    data: {
-      email: email.trim(),
-      normalizedEmail,
-      name: name.trim(),
-      passwordHash,
-    },
-    select: {
-      id: true,
-      email: true,
-      name: true,
-      createdAt: true,
-    },
-  });
+  try {
+    return await prisma.$transaction(async (transaction) => {
+      const user = await transaction.user.create({
+      data: {
+        email: email.trim(),
+        normalizedEmail,
+        name: name.trim(),
+        passwordHash,
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        createdAt: true,
+      },
+    });
+
+      const event = createUserRegisteredEvent(user);
+
+      await transaction.outboxEvent.create({
+        data: {
+          id: event.id,
+          topic: event.topic,
+          eventType: event.eventType,
+          aggregateId: event.aggregateId,
+          payload: event.payload,
+        },
+      });
+
+      return user;
+    });
+  } catch (error) {
+    // O pre-check melhora a mensagem no caso comum, mas duas requisições
+    // simultâneas ainda podem disputar o mesmo índice único do banco.
+    if (error?.code === "P2002") {
+      throw new EmailIsRegisteredError("E-mail já está em uso.");
+    }
+
+    throw error;
+  }
 };
 
 export const loginUser = async ({ email, password }, sessionContext) => {
@@ -65,19 +92,6 @@ export const loginUser = async ({ email, password }, sessionContext) => {
   if (!isPasswordValid) {
     throw new InvalidCredentialsError();
   }
-
-  const accessToken = await createAccessToken(user.id);
-  const refreshToken = createRefreshToken();
-
-  await prisma.refreshSession.create({
-    data: {
-      expiresAt: getRefreshTokenExpiration(),
-      ipAddress: sessionContext.ipAddress,
-      tokenHash: hashRefreshToken(refreshToken),
-      userAgent: sessionContext.userAgent,
-      userId: user.id,
-    },
-  });
 
   return createUserSession(user, sessionContext);
 };

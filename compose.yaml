@@ -33,6 +33,7 @@ services:
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-local-development-only-change-me}
       KAFKA_BROKERS: kafka:29092
       KAFKA_CLIENT_ID: project-service
+      KAFKA_IDENTITY_GROUP_ID: project-service-identity-v1
     command: ["sh", "-c", "npm run prisma:deploy && npm run start:prod"]
     depends_on:
       project-db:
@@ -56,12 +57,14 @@ services:
       IDENTITY_DATABASE_URL: postgresql://labgraph:labgraph@identity-db:5432/labgraph_identity?schema=public
       KAFKA_BROKERS: kafka:29092
       KAFKA_CLIENT_ID: identity-service
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      KAFKA_IDENTITY_GROUP_ID: identity-service-identity-v1
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-local-development-only-change-me}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-local-development-only-change-me}
       GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL:-http://localhost:3000/auth/google/callback}
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-local-development-only-change-me}
       JWT_ACCESS_EXPIRATION: ${JWT_ACCESS_EXPIRATION:-900}
       FRONTEND_URL: ${CORS_ORIGIN:-http://localhost:5173}
+    command: ["sh", "-c", "npm run prisma:deploy && npm run start"]
     depends_on:
       identity-db:
         condition: service_healthy

@@ -2,7 +2,7 @@
   "id": "/",
   "name": "LabGraph",
   "short_name": "LabGraph",
-  "description": "Crie gráficos e tabelas ABNT com rascunhos salvos no navegador.",
+  "description": "Crie gráficos e tabelas ABNT com sincronização segura no LabGraph.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -11,6 +11,26 @@
   "theme_color": "#f8fafc",
   "categories": ["education", "productivity", "utilities"],
   "lang": "pt-BR",
+  "shortcuts": [
+    {
+      "name": "Novo gráfico",
+      "short_name": "Gráfico",
+      "url": "/editor/chart",
+      "icons": [{ "src": "/pwa/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Nova tabela",
+      "short_name": "Tabela",
+      "url": "/editor/table",
+      "icons": [{ "src": "/pwa/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Minha conta",
+      "short_name": "Conta",
+      "url": "/account",
+      "icons": [{ "src": "/pwa/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
   "icons": [
     {
       "src": "/pwa/icon-192.png",

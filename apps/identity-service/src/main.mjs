@@ -2,6 +2,10 @@ import cookieParser from "cookie-parser";
 import express from "express";
 import { prisma } from "./database/prisma.mjs";
 import { authRouter } from "./auth/auth.routes.mjs";
+import {
+  startOutboxPublisher,
+  stopOutboxPublisher,
+} from "./events/outbox-publisher.mjs";
 
 const port = Number(process.env.PORT ?? 3334);
 const app = express();
@@ -31,13 +35,7 @@ app.get("/health", async (_request, response) => {
   }
 });
 
-const notImplemented = (request, response) => {
-  response.status(501).json({
-    message: "Contrato reservado: implemente esta etapa no Identity Service.",
-    route: `${request.method} ${request.path}`,
-  });
-};
-
+startOutboxPublisher();
 
 app.use("/auth", authRouter);
 
@@ -81,6 +79,7 @@ const shutdown = async (signal) => {
     }
 
     try {
+      await stopOutboxPublisher();
       await prisma.$disconnect();
       console.log("Identity Service encerrado.");
     } catch (disconnectError) {

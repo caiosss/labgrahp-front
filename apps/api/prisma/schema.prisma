@@ -42,12 +42,23 @@ model Project {
   updatedAt      DateTime    @updatedAt @map("updated_at")
   deletedAt      DateTime?   @map("deleted_at")
 
-  ownerSession Session? @relation(fields: [ownerSessionId], references: [id], onDelete: Cascade)
+  ownerSession Session?       @relation(fields: [ownerSessionId], references: [id], onDelete: Cascade)
   shares       ProjectShare[]
 
   @@index([ownerSessionId, updatedAt])
   @@index([ownerUserId, updatedAt])
   @@map("projects")
+}
+
+model InboxEvent {
+  eventId     String   @id @map("event_id")
+  eventType   String   @map("event_type")
+  topic       String
+  partition   Int
+  offset      String
+  processedAt DateTime @default(now()) @map("processed_at")
+
+  @@map("inbox_events")
 }
 
 model Draft {

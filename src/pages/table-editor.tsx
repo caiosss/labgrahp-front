@@ -43,7 +43,7 @@ export const TableEditorPage = ({ onBack, projectId }: TableEditorPageProps) => 
     };
 
     return (
-        <main className="min-h-screen bg-slate-50 px-3 py-4 sm:px-6 sm:py-6">
+        <main className="min-h-screen overflow-x-hidden bg-slate-50 px-2 py-4 sm:px-6 sm:py-6 md:pt-20">
             <div className="mx-auto max-w-7xl space-y-6">
                 <div data-tour="table-editor-header">
                     <EditorPageHeader

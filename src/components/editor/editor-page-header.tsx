@@ -107,7 +107,7 @@ export const EditorPageHeader = ({
             </div>
 
             <div className="flex flex-col items-stretch gap-2 sm:items-end">
-                <div className="flex flex-col gap-2 sm:flex-row">
+                <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-row">
                     {onStartTour && (
                         <Button onClick={onStartTour} variant="outline">
                             <HelpCircle size={16} />
