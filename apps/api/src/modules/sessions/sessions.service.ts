@@ -10,7 +10,7 @@ export class SessionsService {
     private readonly sessionsRepository: SessionsRepository,
     @Inject(TokenService)
     private readonly tokenService: TokenService,
-  ) {}
+  ) { }
 
   async createAnonymousSession(): Promise<SessionResponseDto> {
     const token = this.tokenService.createSessionToken();
@@ -36,5 +36,29 @@ export class SessionsService {
       createdAt: session.createdAt.toISOString(),
       lastSeenAt: session.lastSeenAt.toISOString(),
     };
+  }
+
+  async claimAnonymousProjects(
+    userId: string,
+    anonymousToken: string,
+  ) {
+    const tokenHash =
+      this.tokenService.hashToken(anonymousToken);
+
+    const session =
+      await this.sessionsRepository.findActiveByTokenHash(
+        tokenHash,
+      );
+
+    if (!session) {
+      throw new NotFoundException(
+        "Sessão anônima não encontrada ou revogada.",
+      );
+    }
+
+    return this.sessionsRepository.claimProjects(
+      session.id,
+      userId,
+    );
   }
 }

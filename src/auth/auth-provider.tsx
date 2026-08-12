@@ -16,6 +16,7 @@ import {
   clearStoredAccessToken,
   getStoredAccessToken,
 } from "../services/auth-session-storage";
+import { claimAnonymousProjects } from "../services/project-claim-api";
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -40,9 +41,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setUser(null);
   }, []);
 
+  const claimProjectsForSession = useCallback(
+    async (session: AuthSession) => {
+      try {
+        await claimAnonymousProjects(
+          session.accessToken,
+        );
+      } catch (error) {
+        console.warn(
+          "Login concluído, mas não foi possível transferir os projetos anônimos.",
+          error,
+        );
+      }
+
+      return session;
+    },
+    [],
+  );
+
   useEffect(() => {
     return subscribeToAuthSession((session) => {
-      if(session) {
+      if (session) {
         applySession(session);
         return;
       }
@@ -52,13 +71,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, [applySession, clearSession])
 
   const refreshSession = useCallback(async () => {
-    return refreshAccessToken();
-  }, []);
+    const session = await refreshAccessToken();
+
+    return claimProjectsForSession(session);
+  }, [claimProjectsForSession]);
 
   const login = useCallback(
-    async (credentials: LoginCredentials) =>
-      await loginWithPassword(credentials),
-    [],
+    async (credentials: LoginCredentials) => {
+      const session =
+        await loginWithPassword(credentials);
+
+      return claimProjectsForSession(session);
+    },
+    [claimProjectsForSession],
   );
 
   const loginWithGoogle = useCallback(() => {
@@ -88,10 +113,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (storedToken) {
           try {
             const currentUser = await getCurrentUser(storedToken);
+
+            try {
+              await claimAnonymousProjects(storedToken);
+            } catch (error) {
+              console.warn(
+                "Login concluído, mas não foi possível transferir os projetos anônimos.",
+                error,
+              );
+            }
+
             if (active) {
               setAccessToken(storedToken);
               setUser(currentUser);
             }
+
             return;
           } catch (error) {
             if (!(error instanceof IdentityAuthError) || error.status !== 401) {
@@ -101,7 +137,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
 
         const session = await refreshAccessToken();
-        if (active) applySession(session);
+
+        await claimProjectsForSession(session);
+
+        if (active) {
+          applySession(session);
+        }
+
       } catch (error) {
         if (error instanceof IdentityAuthError && error.status === 401) {
           if (active) clearSession();
@@ -118,7 +160,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return () => {
       active = false;
     };
-  }, [applySession, clearSession]);
+  }, [applySession, clearSession, claimProjectsForSession]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -129,6 +171,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       loginWithGoogle,
       logout,
       refreshSession,
+      claimProjectsForSession,
       user,
     }),
     [
@@ -138,6 +181,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       loginWithGoogle,
       logout,
       refreshSession,
+      claimProjectsForSession,
       user,
     ],
   );
