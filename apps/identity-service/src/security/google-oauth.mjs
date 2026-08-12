@@ -44,6 +44,7 @@ export const createGoogleAuthorization = () => {
     );
     authorizationUrl.searchParams.set("response_type", "code");
     authorizationUrl.searchParams.set("scope", "openid email profile");
+    authorizationUrl.searchParams.set("prompt", "select_account");
     authorizationUrl.searchParams.set("state", state);
     authorizationUrl.searchParams.set("nonce", nonce);
     authorizationUrl.searchParams.set("code_challenge", codeChallenge);

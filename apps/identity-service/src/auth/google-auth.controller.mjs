@@ -20,6 +20,12 @@ const getFrontendUrl = () =>
     .trim()
     .replace(/\/$/, "");
 
+const sanitizeOAuthErrorDetail = (value) => {
+  if (typeof value !== "string") return "";
+
+  return value.replace(/[\r\n]/g, " ").slice(0, 500);
+};
+
 export const startGoogleLogin = (_request, response, next) => {
   try {
     const authorization = createGoogleAuthorization();
@@ -40,9 +46,24 @@ export const startGoogleLogin = (_request, response, next) => {
 
 export const finishGoogleLogin = async (request, response) => {
   try {
-    const { code, state, error } = request.query;
+    const {
+      code,
+      state,
+      error,
+      error_description: errorDescription,
+      error_uri: errorUri,
+    } = request.query;
 
-    if (error) throw new Error(`Google recusou o login: ${error}`);
+    if (error) {
+      const description = sanitizeOAuthErrorDetail(errorDescription);
+      const uri = sanitizeOAuthErrorDetail(errorUri);
+      const details = [description, uri].filter(Boolean).join(" | ");
+
+      throw new Error(
+        `Google recusou o login: ${sanitizeOAuthErrorDetail(error)}` +
+          (details ? ` (${details})` : ""),
+      );
+    }
     if (
       typeof code !== "string" ||
       typeof state !== "string" ||

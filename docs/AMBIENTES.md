@@ -55,7 +55,10 @@ Em **Vercel > Project > Settings > Environment Variables**, cadastre:
 
 | Nome | Production | Preview | Development |
 | --- | --- | --- | --- |
-| `VITE_API_URL` | `https://DOMINIO-PUBLICO-DO-GATEWAY` | mesmo gateway ou gateway de staging | `http://localhost:3000` |
+| `VITE_API_URL` | `/api` | `/api` | `http://localhost:3000` |
+
+Em producao, `/api` usa a rewrite de `vercel.json` para encaminhar as chamadas
+ao Gateway. Consulte `docs/PROXY-FIRST-PARTY.md` para o fluxo completo.
 
 Somente o Gateway possui URL pública. Depois de alterar uma variável na Vercel,
 faça um novo deploy: variáveis `VITE_*` são incorporadas ao JavaScript durante o
@@ -102,7 +105,8 @@ FRONTEND_URL=https://DOMINIO-DO-FRONTEND.vercel.app
 IDENTITY_DATABASE_URL=${{Postgres-Identity.DATABASE_URL}}
 GOOGLE_CLIENT_ID=valor-do-google-cloud
 GOOGLE_CLIENT_SECRET=segredo-do-google-cloud
-GOOGLE_CALLBACK_URL=https://DOMINIO-PUBLICO-DO-GATEWAY/auth/google/callback
+GOOGLE_CALLBACK_URL=https://DOMINIO-DO-FRONTEND.vercel.app/api/auth/google/callback
+AUTH_PUBLIC_PATH_PREFIX=/api
 JWT_ACCESS_SECRET=segredo-aleatorio-proprio
 JWT_ACCESS_EXPIRATION=900
 ```
