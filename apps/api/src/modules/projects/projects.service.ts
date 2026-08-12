@@ -1,5 +1,14 @@
-import { ForbiddenException, Inject, Injectable, NotFoundException } from "@nestjs/common";
+import {
+  ForbiddenException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import type { Prisma } from "@prisma/client";
+import {
+  isProjectOwnedBy,
+  type ProjectPrincipal,
+} from "../../common/types/project-principal";
 import { normalizeProjectType } from "./dto/project-type.dto";
 import type { UpsertProjectDto } from "./dto/upsert-project.dto";
 import { toProjectResponse } from "./projects.mapper";
@@ -12,47 +21,51 @@ export class ProjectsService {
     private readonly projectsRepository: ProjectsRepository,
   ) {}
 
-  async findAll(sessionId: string) {
-    const projects = await this.projectsRepository.findAllBySession(sessionId);
-
+  async findAll(principal: ProjectPrincipal) {
+    const projects = await this.projectsRepository.findAllOwned(principal);
     return projects.map(toProjectResponse);
   }
 
-  async findOne(sessionId: string, projectId: string) {
+  async findOne(principal: ProjectPrincipal, projectId: string) {
     const project = await this.projectsRepository.findOwnedProject(
-      sessionId,
+      principal,
       projectId,
     );
 
-    if (!project) {
-      throw new NotFoundException("Projeto não encontrado.");
-    }
-
+    if (!project) throw new NotFoundException("Projeto não encontrado.");
     return toProjectResponse(project);
   }
 
-  async upsert(sessionId: string, projectId: string, dto: UpsertProjectDto) {
+  async upsert(
+    principal: ProjectPrincipal,
+    projectId: string,
+    dto: UpsertProjectDto,
+  ) {
     const existingProject = await this.projectsRepository.findById(projectId);
 
-    if (existingProject && existingProject.ownerSessionId !== sessionId) {
-      throw new ForbiddenException("Projeto não pertence à sessão atual.");
+    if (existingProject && !isProjectOwnedBy(existingProject, principal)) {
+      throw new ForbiddenException("Projeto não pertence ao usuário atual.");
     }
 
-    const project = await this.projectsRepository.upsertOwnedProject({
+    const saveInput = {
       data: dto.data as Prisma.InputJsonValue,
       name: dto.name,
+      principal,
       projectId,
       schemaVersion: dto.schemaVersion ?? 1,
-      sessionId,
       type: normalizeProjectType(dto.type),
-    });
+    };
+
+    const project = existingProject
+      ? await this.projectsRepository.updateOwnedProject(saveInput)
+      : await this.projectsRepository.createOwnedProject(saveInput);
 
     return toProjectResponse(project);
   }
 
-  async remove(sessionId: string, projectId: string) {
+  async remove(principal: ProjectPrincipal, projectId: string) {
     const result = await this.projectsRepository.markProjectAsDeleted(
-      sessionId,
+      principal,
       projectId,
     );
 
@@ -60,8 +73,6 @@ export class ProjectsService {
       throw new NotFoundException("Projeto não encontrado.");
     }
 
-    return {
-      removed: true,
-    };
+    return { removed: true };
   }
 }

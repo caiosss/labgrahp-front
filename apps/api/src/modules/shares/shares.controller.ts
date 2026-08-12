@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, Inject, Param, Post, UseGuards } from "@nestjs/common";
-import { CurrentSession } from "../../common/decorators/current-session.decorator";
-import { SessionTokenGuard } from "../../common/guards/session-token.guard";
-import type { RequestSession } from "../../common/types/request-with-session";
+import { CurrentProjectPrincipal } from "../../common/decorators/current-project-principal.decorator";
+import { ProjectPrincipalGuard } from "../../common/guards/project-principal.guard";
+import type { ProjectPrincipal } from "../../common/types/project-principal";
 import { CreateShareDto } from "./dto/create-share.dto";
 import { SharesService } from "./shares.service";
 
@@ -13,22 +13,22 @@ export class SharesController {
   ) {}
 
   @Post("projects/:projectId/share")
-  @UseGuards(SessionTokenGuard)
+  @UseGuards(ProjectPrincipalGuard)
   createShare(
-    @CurrentSession() session: RequestSession,
+    @CurrentProjectPrincipal() principal: ProjectPrincipal,
     @Param("projectId") projectId: string,
     @Body() dto: CreateShareDto,
   ) {
-    return this.sharesService.createShare(session.id, projectId, dto);
+    return this.sharesService.createShare(principal, projectId, dto);
   }
 
   @Delete("projects/:projectId/share")
-  @UseGuards(SessionTokenGuard)
+  @UseGuards(ProjectPrincipalGuard)
   revokeProjectShares(
-    @CurrentSession() session: RequestSession,
+    @CurrentProjectPrincipal() principal: ProjectPrincipal,
     @Param("projectId") projectId: string,
   ) {
-    return this.sharesService.revokeProjectShares(session.id, projectId);
+    return this.sharesService.revokeProjectShares(principal, projectId);
   }
 
   @Get("shares/:token")

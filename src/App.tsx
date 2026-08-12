@@ -11,6 +11,7 @@ import { fetchSharedProject } from "./services/share-api";
 import { useProjectStore } from "./store/project-store";
 import { createRandomUUID } from "./utils/create-random-uuid";
 import { AuthCallbackPage } from "./pages/auth-callback";
+import { useAuth } from "./hooks/use-auth";
 
 
 
@@ -23,6 +24,7 @@ type Screen =
 export default function App() {
   const [screen, setScreen] = useState<Screen>({ type: "home" });
   const appTheme = useAppTheme();
+  const { isLoading: isAuthLoading } = useAuth();
   const upsertProject = useProjectStore((state) => state.upsertProject);
   const isAuthCallback = window.location.pathname === "/auth/callback";
 
@@ -81,6 +83,14 @@ export default function App() {
 
   if (isAuthCallback) {
     return <AuthCallbackPage />;
+  }
+
+  if (isAuthLoading) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
+        <p className="text-sm text-slate-600">Restaurando sua sessão...</p>
+      </main>
+    );
   }
 
   if (screen.type === "shared-loading") {

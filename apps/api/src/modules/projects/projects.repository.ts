@@ -1,13 +1,14 @@
 import { Inject, Injectable } from "@nestjs/common";
 import type { Prisma, ProjectType } from "@prisma/client";
 import { PrismaService } from "../../common/database/prisma.service";
+import type { ProjectPrincipal } from "../../common/types/project-principal";
 
-interface UpsertProjectInput {
+interface SaveProjectInput {
   data: Prisma.InputJsonValue;
   name: string;
+  principal: ProjectPrincipal;
   projectId: string;
   schemaVersion: number;
-  sessionId: string;
   type: ProjectType;
 }
 
@@ -18,68 +19,75 @@ export class ProjectsRepository {
     private readonly prisma: PrismaService,
   ) {}
 
-  findAllBySession(sessionId: string) {
+  private ownerWhere(principal: ProjectPrincipal): Prisma.ProjectWhereInput {
+    return principal.type === "identity"
+      ? { ownerUserId: principal.userId }
+      : { ownerSessionId: principal.sessionId };
+  }
+
+  private ownerCreate(principal: ProjectPrincipal) {
+    return principal.type === "identity"
+      ? { ownerSessionId: null, ownerUserId: principal.userId }
+      : { ownerSessionId: principal.sessionId, ownerUserId: null };
+  }
+
+  findAllOwned(principal: ProjectPrincipal) {
     return this.prisma.project.findMany({
-      orderBy: {
-        updatedAt: "desc",
-      },
+      orderBy: { updatedAt: "desc" },
       where: {
         deletedAt: null,
-        ownerSessionId: sessionId,
+        ...this.ownerWhere(principal),
       },
     });
   }
 
-  findOwnedProject(sessionId: string, projectId: string) {
+  findOwnedProject(principal: ProjectPrincipal, projectId: string) {
     return this.prisma.project.findFirst({
       where: {
         deletedAt: null,
         id: projectId,
-        ownerSessionId: sessionId,
+        ...this.ownerWhere(principal),
       },
     });
   }
 
   findById(projectId: string) {
-    return this.prisma.project.findUnique({
-      where: {
-        id: projectId,
-      },
-    });
+    return this.prisma.project.findUnique({ where: { id: projectId } });
   }
 
-  upsertOwnedProject(input: UpsertProjectInput) {
-    return this.prisma.project.upsert({
-      create: {
-        data: input.data,
-        id: input.projectId,
-        name: input.name,
-        ownerSessionId: input.sessionId,
-        schemaVersion: input.schemaVersion,
-        type: input.type,
-      },
-      update: {
-        data: input.data,
-        deletedAt: null,
-        name: input.name,
-        schemaVersion: input.schemaVersion,
-        type: input.type,
-      },
-      where: {
-        id: input.projectId,
-      },
-    });
-  }
-
-  markProjectAsDeleted(sessionId: string, projectId: string) {
-    return this.prisma.project.updateMany({
+  createOwnedProject(input: SaveProjectInput) {
+    return this.prisma.project.create({
       data: {
-        deletedAt: new Date(),
+        data: input.data,
+        id: input.projectId,
+        name: input.name,
+        ...this.ownerCreate(input.principal),
+        schemaVersion: input.schemaVersion,
+        type: input.type,
       },
+    });
+  }
+
+  updateOwnedProject(input: SaveProjectInput) {
+    return this.prisma.project.update({
+      data: {
+        data: input.data,
+        deletedAt: null,
+        name: input.name,
+        schemaVersion: input.schemaVersion,
+        type: input.type,
+      },
+      where: { id: input.projectId },
+    });
+  }
+
+  markProjectAsDeleted(principal: ProjectPrincipal, projectId: string) {
+    return this.prisma.project.updateMany({
+      data: { deletedAt: new Date() },
       where: {
         deletedAt: null,
         id: projectId,
-        ownerSessionId: sessionId,
+        ...this.ownerWhere(principal),
       },
     });
   }

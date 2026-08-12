@@ -1,12 +1,21 @@
-import { Body, Controller, Delete, Get, Inject, Param, Put, UseGuards } from "@nestjs/common";
-import { CurrentSession } from "../../common/decorators/current-session.decorator";
-import { SessionTokenGuard } from "../../common/guards/session-token.guard";
-import type { RequestSession } from "../../common/types/request-with-session";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Inject,
+  Param,
+  Put,
+  UseGuards,
+} from "@nestjs/common";
+import { CurrentProjectPrincipal } from "../../common/decorators/current-project-principal.decorator";
+import { ProjectPrincipalGuard } from "../../common/guards/project-principal.guard";
+import type { ProjectPrincipal } from "../../common/types/project-principal";
 import { UpsertProjectDto } from "./dto/upsert-project.dto";
 import { ProjectsService } from "./projects.service";
 
 @Controller("projects")
-@UseGuards(SessionTokenGuard)
+@UseGuards(ProjectPrincipalGuard)
 export class ProjectsController {
   constructor(
     @Inject(ProjectsService)
@@ -14,32 +23,32 @@ export class ProjectsController {
   ) {}
 
   @Get()
-  findAll(@CurrentSession() session: RequestSession) {
-    return this.projectsService.findAll(session.id);
+  findAll(@CurrentProjectPrincipal() principal: ProjectPrincipal) {
+    return this.projectsService.findAll(principal);
   }
 
   @Get(":projectId")
   findOne(
-    @CurrentSession() session: RequestSession,
+    @CurrentProjectPrincipal() principal: ProjectPrincipal,
     @Param("projectId") projectId: string,
   ) {
-    return this.projectsService.findOne(session.id, projectId);
+    return this.projectsService.findOne(principal, projectId);
   }
 
   @Put(":projectId")
   upsert(
-    @CurrentSession() session: RequestSession,
+    @CurrentProjectPrincipal() principal: ProjectPrincipal,
     @Param("projectId") projectId: string,
     @Body() dto: UpsertProjectDto,
   ) {
-    return this.projectsService.upsert(session.id, projectId, dto);
+    return this.projectsService.upsert(principal, projectId, dto);
   }
 
   @Delete(":projectId")
   remove(
-    @CurrentSession() session: RequestSession,
+    @CurrentProjectPrincipal() principal: ProjectPrincipal,
     @Param("projectId") projectId: string,
   ) {
-    return this.projectsService.remove(session.id, projectId);
+    return this.projectsService.remove(principal, projectId);
   }
 }

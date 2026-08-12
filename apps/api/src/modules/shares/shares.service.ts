@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { TokenService } from "../../common/tokens/token.service";
+import type { ProjectPrincipal } from "../../common/types/project-principal";
 import { ProjectsRepository } from "../projects/projects.repository";
 import { toProjectResponse } from "../projects/projects.mapper";
 import type { CreateShareDto } from "./dto/create-share.dto";
@@ -22,9 +23,13 @@ export class SharesService {
     private readonly tokenService: TokenService,
   ) {}
 
-  async createShare(sessionId: string, projectId: string, dto: CreateShareDto) {
+  async createShare(
+    principal: ProjectPrincipal,
+    projectId: string,
+    dto: CreateShareDto,
+  ) {
     const project = await this.projectsRepository.findOwnedProject(
-      sessionId,
+      principal,
       projectId,
     );
 
@@ -80,9 +85,9 @@ export class SharesService {
     };
   }
 
-  async revokeProjectShares(sessionId: string, projectId: string) {
+  async revokeProjectShares(principal: ProjectPrincipal, projectId: string) {
     const project = await this.projectsRepository.findOwnedProject(
-      sessionId,
+      principal,
       projectId,
     );
 

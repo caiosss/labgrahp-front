@@ -69,6 +69,7 @@ const getProjectWithFreshTimestamp = (project: ProjectDto): ProjectDto => ({
 
 const saveProjectToRemote = async (project: ProjectDto) => {
     const savedProject = await apiRequest<ApiProjectDto>(`/projects/${project.id}`, {
+        authentication: "identity-or-anonymous",
         body: JSON.stringify(toApiProjectPayload(project)),
         method: "PUT",
     });
@@ -131,7 +132,9 @@ export const fetchProjects = async () => {
     try {
         await syncPendingProjects();
 
-        const projects = await apiRequest<ApiProjectDto[]>("/projects");
+        const projects = await apiRequest<ApiProjectDto[]>("/projects", {
+            authentication: "identity-or-anonymous",
+        });
 
         return mergeProjectsWithPendingProjects(projects.map(toProjectDto));
     } catch (error) {
@@ -180,6 +183,7 @@ export const saveProjectToApi = async (
 
 export const deleteProjectFromApi = (projectId: string) => {
     return apiRequest<{ removed: boolean }>(`/projects/${projectId}`, {
+        authentication: "identity-or-anonymous",
         method: "DELETE",
     });
 };

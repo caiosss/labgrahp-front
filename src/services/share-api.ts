@@ -36,6 +36,7 @@ export const createProjectShare = async (projectId: string) => {
     const share = await apiRequest<ApiProjectShareDto>(
         `/projects/${projectId}/share`,
         {
+            authentication: "identity-or-anonymous",
             body: JSON.stringify({
                 permission: "read",
             }),
@@ -48,6 +49,7 @@ export const createProjectShare = async (projectId: string) => {
 
 export const revokeProjectShares = (projectId: string) => {
     return apiRequest<{ revoked: boolean }>(`/projects/${projectId}/share`, {
+        authentication: "identity-or-anonymous",
         method: "DELETE",
     });
 };

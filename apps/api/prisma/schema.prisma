@@ -32,7 +32,8 @@ model Session {
 
 model Project {
   id             String      @id @default(uuid())
-  ownerSessionId String      @map("owner_session_id")
+  ownerSessionId String?     @map("owner_session_id")
+  ownerUserId    String?     @map("owner_user_id")
   type           ProjectType
   name           String
   schemaVersion  Int         @default(1) @map("schema_version")
@@ -41,10 +42,11 @@ model Project {
   updatedAt      DateTime    @updatedAt @map("updated_at")
   deletedAt      DateTime?   @map("deleted_at")
 
-  ownerSession Session       @relation(fields: [ownerSessionId], references: [id], onDelete: Cascade)
+  ownerSession Session? @relation(fields: [ownerSessionId], references: [id], onDelete: Cascade)
   shares       ProjectShare[]
 
   @@index([ownerSessionId, updatedAt])
+  @@index([ownerUserId, updatedAt])
   @@map("projects")
 }
 

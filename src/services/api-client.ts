@@ -14,7 +14,13 @@ const API_BASE_URL = import.meta.env.VITE_API_URL ?? "";
 export type AuthenticationMode =
     | "anonymous"
     | "identity"
+    | "identity-or-anonymous"
     | "none";
+
+type EffectiveAuthenticationMode = Exclude<
+    AuthenticationMode,
+    "identity-or-anonymous"
+>;
 
 interface ApiRequestOptions extends RequestInit {
     authentication?: AuthenticationMode;
@@ -92,8 +98,18 @@ const resolveAuthenticationMode = (
     return "anonymous";
 };
 
-const getAuthenticationToken = async (
+const resolveEffectiveAuthenticationMode = (
     mode: AuthenticationMode,
+): EffectiveAuthenticationMode => {
+    if (mode !== "identity-or-anonymous") {
+        return mode;
+    }
+
+    return getStoredAccessToken() ? "identity" : "anonymous";
+};
+
+const getAuthenticationToken = async (
+    mode: EffectiveAuthenticationMode,
 ): Promise<string | null> => {
     if (mode === "none") {
         return null;
@@ -123,8 +139,9 @@ export const apiRequest = async <T>(
     delete requestOptions.authenticated;
 
     const headers = new Headers(requestOptions.headers);
-    const authenticationMode =
-        resolveAuthenticationMode(options);
+    const authenticationMode = resolveEffectiveAuthenticationMode(
+        resolveAuthenticationMode(options),
+    );
 
     const method = requestOptions.method ?? "GET";
 
@@ -224,4 +241,3 @@ export const apiRequest = async <T>(
 
     return response.json() as Promise<T>;
 };
-
