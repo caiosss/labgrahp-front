@@ -1,4 +1,4 @@
-import { ArrowLeft, Eye, EyeOff, LoaderCircle, LockKeyhole, Mail, UserRound } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Info, LoaderCircle, LockKeyhole, Mail, UserRound } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { GoogleLogo } from "../components/auth/google-logo";
 import { Button } from "../components/ui/button";
@@ -11,6 +11,24 @@ interface AuthPageProps {
   onNavigate: (path: string) => void;
 }
 
+const isIosHomeScreenApp = () => {
+  if (typeof window === "undefined" || typeof navigator === "undefined") {
+    return false;
+  }
+
+  const navigatorWithStandalone = navigator as Navigator & {
+    standalone?: boolean;
+  };
+  const isAppleMobile =
+    /iPad|iPhone|iPod/i.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const isOpenedFromHomeScreen =
+    window.matchMedia("(display-mode: standalone)").matches ||
+    navigatorWithStandalone.standalone === true;
+
+  return isAppleMobile && isOpenedFromHomeScreen;
+};
+
 export const AuthPage = ({ mode, onNavigate }: AuthPageProps) => {
   const { isAuthenticated, login, loginWithGoogle, register, user } = useAuth();
   const [name, setName] = useState("");
@@ -21,6 +39,7 @@ export const AuthPage = ({ mode, onNavigate }: AuthPageProps) => {
   const [error, setError] = useState<string>();
 
   const isRegister = mode === "register";
+  const shouldExplainGoogleLogin = isIosHomeScreenApp();
 
   if (isAuthenticated) {
     return (
@@ -98,12 +117,35 @@ export const AuthPage = ({ mode, onNavigate }: AuthPageProps) => {
             </p>
           </div>
 
-          <Button className="h-11 w-full bg-white text-slate-800 shadow-sm hover:bg-slate-50" onClick={loginWithGoogle} type="button" variant="outline">
-            <GoogleLogo /> Fazer login com o Google
-          </Button>
+          {shouldExplainGoogleLogin ? (
+            <div
+              aria-label="Orientacao sobre o login com Google"
+              className="flex gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-4"
+              role="note"
+            >
+              <Info className="mt-0.5 size-5 shrink-0 text-blue-600" />
+              <div>
+                <p className="text-sm font-semibold text-blue-950">
+                  Est&aacute; tudo certo com sua conta
+                </p>
+                <p className="mt-1 text-sm leading-6 text-slate-600">
+                  Quando o LabGraph &eacute; aberto pelo &iacute;cone da tela inicial no
+                  iPhone, o Google pede que o acesso seja feito no navegador.
+                  Voc&ecirc; pode entrar normalmente com e-mail e senha abaixo ou
+                  abrir o LabGraph no Safari para usar sua conta Google.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <Button className="h-11 w-full bg-white text-slate-800 shadow-sm hover:bg-slate-50" onClick={loginWithGoogle} type="button" variant="outline">
+              <GoogleLogo /> Fazer login com o Google
+            </Button>
+          )}
 
           <div className="my-6 flex items-center gap-3 text-xs text-slate-400">
-            <span className="h-px flex-1 bg-slate-200" /> ou continue com e-mail <span className="h-px flex-1 bg-slate-200" />
+            <span className="h-px flex-1 bg-slate-200" />
+            {shouldExplainGoogleLogin ? "continue com e-mail" : "ou continue com e-mail"}
+            <span className="h-px flex-1 bg-slate-200" />
           </div>
 
           <form className="space-y-4" onSubmit={handleSubmit}>

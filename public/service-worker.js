@@ -1,4 +1,4 @@
-const CACHE_VERSION = "labgraph-v3";
+const CACHE_VERSION = "labgraph-v4";
 const CACHE_PREFIX = "labgraph-";
 const APP_SHELL_URLS = [
   "/",
