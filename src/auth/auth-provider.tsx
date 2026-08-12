@@ -7,6 +7,7 @@ import {
   loginWithPassword,
   logoutCurrentSession,
   refreshAccessToken,
+  subscribeToAuthSession,
   type AuthenticatedUser,
   type AuthSession,
   type LoginCredentials,
@@ -39,21 +40,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setUser(null);
   }, []);
 
-  const refreshSession = useCallback(async () => {
-    try {
-      return applySession(await refreshAccessToken());
-    } catch (error) {
-      if (error instanceof IdentityAuthError && error.status === 401) {
-        clearSession();
+  useEffect(() => {
+    return subscribeToAuthSession((session) => {
+      if(session) {
+        applySession(session);
+        return;
       }
-      throw error;
-    }
-  }, [applySession, clearSession]);
+
+      clearSession();
+    });
+  }, [applySession, clearSession])
+
+  const refreshSession = useCallback(async () => {
+    return refreshAccessToken();
+  }, []);
 
   const login = useCallback(
     async (credentials: LoginCredentials) =>
-      applySession(await loginWithPassword(credentials)),
-    [applySession],
+      await loginWithPassword(credentials),
+    [],
   );
 
   const loginWithGoogle = useCallback(() => {
@@ -72,7 +77,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     let active = true;
 
     const restoreSession = async () => {
-      // O callback conclui o OAuth e chama refreshSession por conta própria.
       if (window.location.pathname === "/auth/callback") {
         if (active) setIsLoading(false);
         return;

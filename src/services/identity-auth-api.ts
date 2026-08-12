@@ -35,6 +35,35 @@ export class IdentityAuthError extends Error {
 
 let refreshRequest: Promise<AuthSession> | null = null;
 
+type AuthSessionListener = (
+  session: AuthSession | null,
+) => void;
+
+const authSessionListeners = new Set<AuthSessionListener>();
+
+const notifyAuthSessionListeners = (
+  session: AuthSession | null,
+) => {
+  authSessionListeners.forEach((listener) => {
+    listener(session)
+  });
+};
+
+export const subscribeToAuthSession = (
+  listener: AuthSessionListener,
+) => {
+  authSessionListeners.add(listener);
+
+  return () => {
+    authSessionListeners.delete(listener);
+  }
+};
+
+const clearIdentitySession = () => {
+  clearStoredAccessToken();
+  notifyAuthSessionListeners(null);
+};
+
 const parseErrorMessage = async (response: Response, fallback: string) => {
   try {
     const body = (await response.json()) as { message?: unknown };
@@ -46,6 +75,8 @@ const parseErrorMessage = async (response: Response, fallback: string) => {
 
 const validateSession = (session: AuthSession) => {
   if (!session.accessToken || !session.user?.id) {
+    clearIdentitySession();
+
     throw new IdentityAuthError(
       "O Identity Service retornou uma sessão inválida.",
       502,
@@ -53,6 +84,8 @@ const validateSession = (session: AuthSession) => {
   }
 
   setStoredAccessToken(session.accessToken);
+  notifyAuthSessionListeners(session);
+
   return session;
 };
 
@@ -63,7 +96,10 @@ const requestNewAccessToken = async () => {
   });
 
   if (!response.ok) {
-    clearStoredAccessToken();
+    if(response.status === 401) {
+      clearIdentitySession();
+    }
+
     throw new IdentityAuthError(
       await parseErrorMessage(
         response,
@@ -143,7 +179,7 @@ export const logoutCurrentSession = async () => {
       );
     }
   } finally {
-    clearStoredAccessToken();
+    clearIdentitySession();
   }
 };
 
