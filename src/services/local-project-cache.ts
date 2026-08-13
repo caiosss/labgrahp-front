@@ -2,6 +2,7 @@ import type { ProjectDto } from "../types/project-dto";
 import { logClientError } from "./client-logger";
 
 const PENDING_PROJECTS_KEY = "labgraph-pending-projects";
+const DELETED_PROJECTS_KEY = "labgraph-deleted-projects";
 
 export interface PendingProjectDto {
     project: ProjectDto;
@@ -35,6 +36,40 @@ const writePendingProjectEntries = (entries: PendingProjectDto[]) => {
     window.localStorage.setItem(PENDING_PROJECTS_KEY, JSON.stringify(entries));
 };
 
+const readDeletedProjectIds = () => {
+    try {
+        const storedIds = window.localStorage.getItem(DELETED_PROJECTS_KEY);
+
+        if (!storedIds) return [];
+
+        const parsedIds = JSON.parse(storedIds);
+
+        return Array.isArray(parsedIds)
+            ? parsedIds.filter((id): id is string => typeof id === "string")
+            : [];
+    } catch (error) {
+        logClientError("local-project-deletions-read", error);
+        return [];
+    }
+};
+
+const writeDeletedProjectIds = (projectIds: string[]) => {
+    window.localStorage.setItem(
+        DELETED_PROJECTS_KEY,
+        JSON.stringify(projectIds.slice(0, 200)),
+    );
+};
+
+export const restoreProjectLocally = (projectId: string) => {
+    try {
+        writeDeletedProjectIds(
+            readDeletedProjectIds().filter((currentId) => currentId !== projectId),
+        );
+    } catch (error) {
+        logClientError("local-project-deletion-clear", error, { projectId });
+    }
+};
+
 export const getPendingProjects = () =>
     readPendingProjectEntries().map((entry) => entry.project);
 
@@ -51,6 +86,7 @@ export const savePendingProject = (project: ProjectDto, reason?: string) => {
     ];
 
     try {
+        restoreProjectLocally(project.id);
         writePendingProjectEntries(nextEntries);
 
         return true;
@@ -61,6 +97,20 @@ export const savePendingProject = (project: ProjectDto, reason?: string) => {
         });
 
         return false;
+    }
+};
+
+export const markProjectAsDeletedLocally = (projectId: string) => {
+    removePendingProject(projectId);
+
+    try {
+        const deletedProjectIds = readDeletedProjectIds();
+
+        if (!deletedProjectIds.includes(projectId)) {
+            writeDeletedProjectIds([projectId, ...deletedProjectIds]);
+        }
+    } catch (error) {
+        logClientError("local-project-deletion-write", error, { projectId });
     }
 };
 
@@ -80,13 +130,18 @@ export const removePendingProject = (projectId: string) => {
 
 export const mergeProjectsWithPendingProjects = (projects: ProjectDto[]) => {
     const projectMap = new Map<string, ProjectDto>();
+    const deletedProjectIds = new Set(readDeletedProjectIds());
 
     projects.forEach((project) => {
-        projectMap.set(project.id, project);
+        if (!deletedProjectIds.has(project.id)) {
+            projectMap.set(project.id, project);
+        }
     });
 
     getPendingProjects().forEach((project) => {
-        projectMap.set(project.id, project);
+        if (!deletedProjectIds.has(project.id)) {
+            projectMap.set(project.id, project);
+        }
     });
 
     return Array.from(projectMap.values()).sort(

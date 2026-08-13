@@ -25,12 +25,15 @@ export const useTableEditor = (projectId?: string) => {
                 (sourceProject.type === "table" && tableDraft.projectId === sourceProject.id))
             ? tableDraft
             : undefined;
-    
-            const sourceTable = sourceProject?.type === "table" ? sourceProject.table : matchingDraft?.table ?? initialTable;
+    const sourceTable =
+        matchingDraft?.table ??
+        (sourceProject?.type === "table" ? sourceProject.table : initialTable);
 
     const previewRef = useRef<HTMLDivElement>(null);
     const [currentProjectId, setCurrentProjectId] = useState<string | undefined>(
-        sourceProject?.type === "table" ? sourceProject.id : undefined,
+        sourceProject?.type === "table"
+            ? sourceProject.id
+            : matchingDraft?.projectId,
     );
     const [lastSavedAt, setLastSavedAt] = useState<string | undefined>(
         sourceProject?.type === "table" ? sourceProject.updatedAt : undefined,

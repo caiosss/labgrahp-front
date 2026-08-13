@@ -42,9 +42,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const clearSession = useCallback(() => {
     clearStoredAccessToken();
+    setProjects([]);
     setAccessToken(null);
     setUser(null);
-  }, []);
+  }, [setProjects]);
 
   const claimProjectsForSession = useCallback(
     async (session: AuthSession) => {

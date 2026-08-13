@@ -7,8 +7,10 @@ import { getStoredAccessToken } from "./auth-session-storage";
 import { logClientError } from "./client-logger";
 import {
     getPendingProjects,
+    markProjectAsDeletedLocally,
     mergeProjectsWithPendingProjects,
     removePendingProject,
+    restoreProjectLocally,
     savePendingProject,
 } from "./local-project-cache";
 
@@ -101,6 +103,7 @@ const syncPendingProjects = async () => {
             const savedProject = await saveProjectToRemote(project);
 
             removePendingProject(project.id);
+            restoreProjectLocally(project.id);
             syncedProjects.push(savedProject);
         } catch (error) {
             logClientError("project-sync-pending", error, {
@@ -169,6 +172,7 @@ export const saveProjectToApi = async (
         const savedProject = await saveProjectToRemote(projectToSave);
 
         removePendingProject(project.id);
+        restoreProjectLocally(project.id);
 
         return {
             persistedIn: "api",
@@ -201,14 +205,29 @@ export const saveProjectToApi = async (
     }
 };
 
-export const deleteProjectFromApi = (projectId: string) => {
-    return apiRequest<{ removed: boolean }>(`/projects/${projectId}`, {
-        authentication: "identity-or-anonymous",
-        method: "DELETE",
-    }).then((result) => {
-        removePendingProject(projectId);
+export const deleteProjectFromApi = async (projectId: string) => {
+    try {
+        const result = await apiRequest<{ removed: boolean }>(
+            `/projects/${projectId}`,
+            {
+                authentication: "identity-or-anonymous",
+                method: "DELETE",
+            },
+        );
+
+        markProjectAsDeletedLocally(projectId);
         return result;
-    });
+    } catch (error) {
+        // Um 404 pode representar um projeto que existia apenas no cache local
+        // de uma sessão anônima anterior. Nesse caso, ainda é seguro removê-lo
+        // deste dispositivo e considerar a exclusão concluída.
+        if (error instanceof ApiError && error.status === 404) {
+            markProjectAsDeletedLocally(projectId);
+            return { removed: true };
+        }
+
+        throw error;
+    }
 };
 
 export const fetchChartDraft = async () => {

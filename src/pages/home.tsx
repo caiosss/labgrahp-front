@@ -36,7 +36,7 @@ export const HomePage = ({
     const projects = useProjectStore((state) => state.projects);
     const chartDraft = useProjectStore((state) => state.chartDraft);
     const tableDraft = useProjectStore((state) => state.tableDraft);
-    const setProjects = useProjectStore((state) => state.setProjects);
+    const mergeProjects = useProjectStore((state) => state.mergeProjects);
     const setChartDraft = useProjectStore((state) => state.setChartDraft);
     const setTableDraft = useProjectStore((state) => state.setTableDraft);
     const removeProject = useProjectStore((state) => state.removeProject);
@@ -82,7 +82,7 @@ export const HomePage = ({
             }
 
             if (projectsResult.status === "fulfilled") {
-                setProjects(projectsResult.value);
+                mergeProjects(projectsResult.value);
                 setProjectsLoadError(undefined);
             } else {
                 logClientError("home-load-projects", projectsResult.reason);
@@ -115,7 +115,7 @@ export const HomePage = ({
         return () => {
             shouldUpdateState = false;
         };
-    }, [setChartDraft, setProjects, setTableDraft]);
+    }, [mergeProjects, setChartDraft, setTableDraft]);
 
     return (
         <main className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 sm:py-10 md:pt-20">
