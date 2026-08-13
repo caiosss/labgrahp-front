@@ -98,3 +98,15 @@ Drafts também continuam associados apenas à sessão anônima nesta etapa.
 | Outro usuário tenta sobrescrever projeto | `403 Forbidden` |
 | JWT adulterado | `401 Unauthorized` |
 | Projeto autenticado é compartilhado | link público funciona |
+# Endpoints de listagem
+
+Os dois tipos de proprietário possuem endpoints distintos:
+
+```text
+GET /projects       -> sessão anônima
+GET /projects/mine  -> usuário cadastrado autenticado por JWT
+```
+
+`POST /sessions/claim-projects` não é uma listagem. Ele recebe o token anônimo,
+troca `owner_session_id` por `owner_user_id` e devolve a quantidade transferida
+e a lista final pertencente ao usuário.

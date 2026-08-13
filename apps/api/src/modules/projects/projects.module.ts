@@ -6,10 +6,12 @@ import { TokenService } from "../../common/tokens/token.service";
 import { ProjectsController } from "./projects.controller";
 import { ProjectsRepository } from "./projects.repository";
 import { ProjectsService } from "./projects.service";
+import { AccountProjectsController } from "./account-projects.controller";
 
 @Module({
   imports: [IdentityAuthModule],
-  controllers: [ProjectsController],
+  // Registre a rota estática /projects/mine antes de /projects/:projectId.
+  controllers: [AccountProjectsController, ProjectsController],
   providers: [
     PrismaService,
     TokenService,

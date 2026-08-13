@@ -2,12 +2,14 @@ import {
     clearStoredSessionToken,
     getStoredSessionToken,
 } from "./session-storage";
+import type { SharedProjectDto } from "../../packages/shared/src";
 
 const API_BASE_URL =
     import.meta.env.VITE_API_URL ?? "";
 
 export interface ClaimProjectsResult {
     claimedProjects: number;
+    projects: SharedProjectDto<Record<string, unknown>>[];
 }
 
 export const claimAnonymousProjects = async (
@@ -18,6 +20,7 @@ export const claimAnonymousProjects = async (
     if (!anonymousToken) {
         return {
             claimedProjects: 0,
+            projects: [],
         };
     }
 

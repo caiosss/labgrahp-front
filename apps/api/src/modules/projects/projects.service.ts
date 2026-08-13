@@ -26,6 +26,10 @@ export class ProjectsService {
     return projects.map(toProjectResponse);
   }
 
+  async findAllForUser(userId: string) {
+    return this.findAll({ type: "identity", userId });
+  }
+
   async findOne(principal: ProjectPrincipal, projectId: string) {
     const project = await this.projectsRepository.findOwnedProject(
       principal,

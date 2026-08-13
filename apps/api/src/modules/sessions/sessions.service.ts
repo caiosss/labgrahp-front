@@ -2,6 +2,7 @@ import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { TokenService } from "../../common/tokens/token.service";
 import { SessionsRepository } from "./sessions.repository";
 import type { SessionResponseDto } from "./dto/session-response.dto";
+import { toProjectResponse } from "../projects/projects.mapper";
 
 @Injectable()
 export class SessionsService {
@@ -56,9 +57,14 @@ export class SessionsService {
       );
     }
 
-    return this.sessionsRepository.claimProjects(
+    const result = await this.sessionsRepository.claimProjects(
       session.id,
       userId,
     );
+
+    return {
+      claimedProjects: result.claimedProjects,
+      projects: result.projects.map(toProjectResponse),
+    };
   }
 }

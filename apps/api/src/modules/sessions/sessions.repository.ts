@@ -52,8 +52,17 @@ export class SessionsRepository {
         },
       });
 
+      const projects = await transaction.project.findMany({
+        orderBy: { updatedAt: "desc" },
+        where: {
+          deletedAt: null,
+          ownerUserId: userId,
+        },
+      });
+
       return {
         claimedProjects: result.count,
+        projects,
       };
     });
   }

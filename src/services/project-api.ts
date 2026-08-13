@@ -3,6 +3,7 @@ import type { ChartDraftDto, ProjectDto, TableDraftDto } from "../types/project-
 import type { ChartConfig } from "../types/chart";
 import type { AbntTableConfig } from "../types/table";
 import { ApiError, apiRequest } from "./api-client";
+import { getStoredAccessToken } from "./auth-session-storage";
 import { logClientError } from "./client-logger";
 import {
     getPendingProjects,
@@ -138,9 +139,14 @@ export const fetchProjects = async () => {
     try {
         await syncPendingProjects();
 
-        const projects = await apiRequest<ApiProjectDto[]>("/projects", {
-            authentication: "identity-or-anonymous",
-        });
+        const isAuthenticated = Boolean(getStoredAccessToken());
+
+        const projects = await apiRequest<ApiProjectDto[]>(
+            isAuthenticated ? "/projects/mine" : "/projects",
+            {
+                authentication: isAuthenticated ? "identity" : "anonymous",
+            },
+        );
 
         return mergeProjectsWithPendingProjects(projects.map(toProjectDto));
     } catch (error) {
