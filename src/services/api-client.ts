@@ -10,6 +10,7 @@ import { logClientError } from "./client-logger";
 
 
 const API_BASE_URL = import.meta.env.VITE_API_URL ?? "";
+let anonymousSessionRequest: Promise<SharedSessionDto> | null = null;
 
 export type AuthenticationMode =
     | "anonymous"
@@ -96,8 +97,18 @@ export const getSessionToken = async () => {
         return storedToken;
     }
 
-    const session = await createAnonymousSession();
-    setStoredSessionToken(session.token);
+    if (!anonymousSessionRequest) {
+        anonymousSessionRequest = createAnonymousSession()
+            .then((session) => {
+                setStoredSessionToken(session.token);
+                return session;
+            })
+            .finally(() => {
+                anonymousSessionRequest = null;
+            });
+    }
+
+    const session = await anonymousSessionRequest;
 
     return session.token;
 };

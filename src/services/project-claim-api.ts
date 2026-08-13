@@ -36,8 +36,17 @@ export const claimAnonymousProjects = async (
     );
 
     if (!response.ok) {
+        let detail = `HTTP ${response.status}`;
+
+        try {
+            const body = await response.json() as { message?: unknown };
+            if (typeof body.message === "string") detail = body.message;
+        } catch {
+            // Mantém o status quando a resposta não possui JSON.
+        }
+
         throw new Error(
-            "Não foi possível transferir os projetos anônimos.",
+            `Não foi possível transferir os projetos anônimos: ${detail}`,
         );
     }
 
@@ -46,6 +55,8 @@ export const claimAnonymousProjects = async (
     // A sessão já foi transferida. No próximo uso anônimo, criamos uma nova
     // identidade local para não misturar projetos posteriores ao logout.
     clearStoredSessionToken();
+
+    console.info("[LabGraph] Transferência de projetos concluída.", result);
 
     return result;
 };

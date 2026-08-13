@@ -19,12 +19,15 @@ import {
   getStoredAccessToken,
 } from "../services/auth-session-storage";
 import { claimAnonymousProjects } from "../services/project-claim-api";
+import { fetchProjects } from "../services/project-api";
+import { useProjectStore } from "../store/project-store";
 
 interface AuthProviderProps {
   children: ReactNode;
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
+  const setProjects = useProjectStore((state) => state.setProjects);
   const [accessToken, setAccessToken] = useState<string | null>(() =>
     getStoredAccessToken(),
   );
@@ -46,9 +49,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const claimProjectsForSession = useCallback(
     async (session: AuthSession) => {
       try {
-        await claimAnonymousProjects(
-          session.accessToken,
-        );
+        await claimAnonymousProjects(session.accessToken);
       } catch (error) {
         console.warn(
           "Login concluído, mas não foi possível transferir os projetos anônimos.",
@@ -56,9 +57,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
         );
       }
 
+      try {
+        // O claim altera apenas a propriedade no banco. Recarregamos a lista
+        // com o JWT para refletir imediatamente os projetos agora pertencentes
+        // ao usuário e sincronizar eventuais salvamentos locais pendentes.
+        setProjects(await fetchProjects());
+      } catch (error) {
+        console.warn(
+          "Login concluído, mas não foi possível recarregar os projetos.",
+          error,
+        );
+      }
+
       return session;
     },
-    [],
+    [setProjects],
   );
 
   useEffect(() => {
@@ -138,6 +151,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
               );
             }
 
+            setProjects(await fetchProjects());
+
             if (active) {
               setAccessToken(storedToken);
               setUser(currentUser);
@@ -175,7 +190,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return () => {
       active = false;
     };
-  }, [applySession, clearSession, claimProjectsForSession]);
+  }, [applySession, clearSession, claimProjectsForSession, setProjects]);
 
   const value = useMemo<AuthContextValue>(
     () => ({

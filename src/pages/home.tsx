@@ -1,5 +1,5 @@
 import { BarChart3, Table2 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
     fetchChartDraft,
     fetchProjects,
@@ -28,6 +28,7 @@ export const HomePage = ({
     const setProjects = useProjectStore((state) => state.setProjects);
     const setChartDraft = useProjectStore((state) => state.setChartDraft);
     const setTableDraft = useProjectStore((state) => state.setTableDraft);
+    const [projectsLoadError, setProjectsLoadError] = useState<string>();
 
     useEffect(() => {
         let shouldUpdateState = true;
@@ -46,8 +47,14 @@ export const HomePage = ({
 
             if (projectsResult.status === "fulfilled") {
                 setProjects(projectsResult.value);
+                setProjectsLoadError(undefined);
             } else {
                 logClientError("home-load-projects", projectsResult.reason);
+                setProjectsLoadError(
+                    projectsResult.reason instanceof Error
+                        ? projectsResult.reason.message
+                        : "Não foi possível carregar seus projetos agora.",
+                );
             }
 
             if (chartDraftResult.status === "fulfilled" && chartDraftResult.value) {
@@ -140,6 +147,12 @@ export const HomePage = ({
                     <h2 className="mb-4 text-lg font-semibold text-slate-900">
                         Projetos recentes
                     </h2>
+
+                    {projectsLoadError && (
+                        <p className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800" role="status">
+                            Não foi possível atualizar seus projetos: {projectsLoadError}
+                        </p>
+                    )}
 
                     {tableDraft && (
                         <button

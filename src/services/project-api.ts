@@ -146,6 +146,10 @@ export const fetchProjects = async () => {
     } catch (error) {
         logClientError("project-fetch", error);
 
+        if (!canUseLocalFallback(error)) {
+            throw error;
+        }
+
         return mergeProjectsWithPendingProjects([]);
     }
 };
