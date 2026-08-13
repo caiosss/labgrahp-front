@@ -39,7 +39,10 @@ OLLAMA_MAX_LOADED_MODELS=1
 OLLAMA_NUM_PARALLEL=1
 ```
 
-Em **Settings > Volumes**, conecte um volume com o caminho:
+Volte ao canvas do projeto, clique com o botão direito em uma área vazia e
+selecione **New Volume** (também é possível procurar `Volume` na Command
+Palette). Escolha o serviço `ollama` quando o Railway perguntar onde conectar o
+volume e informe o mount path:
 
 ```text
 /root/.ollama
@@ -92,6 +95,10 @@ Como limite inicial, use 1 vCPU, 1 GB de memória e uma réplica. O processament
 pesado acontece no Ollama.
 
 Faça o deploy. O healthcheck `/health` deve terminar com status `200`.
+
+Se o processo encerrar durante o startup, confirme nos logs se existe uma
+mensagem `jwt_access_secret Field required`. Nesse caso, a Shared Variable não
+foi associada corretamente ao serviço.
 
 ## 4. Conectar o API Gateway
 
