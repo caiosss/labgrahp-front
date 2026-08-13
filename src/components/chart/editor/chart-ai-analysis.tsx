@@ -198,7 +198,7 @@ export const ChartAiAnalysis = ({ chart }: ChartAiAnalysisProps) => {
                     </div>
 
                     <p className="text-xs text-violet-700">
-                        {analysis.disclaimer} Modelo: {analysis.model}.
+                        {analysis.disclaimer}
                     </p>
                 </div>
             )}
