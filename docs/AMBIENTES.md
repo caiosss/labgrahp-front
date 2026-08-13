@@ -73,6 +73,7 @@ PORT=3000
 CORS_ORIGIN=https://DOMINIO-DO-FRONTEND.vercel.app
 PROJECT_SERVICE_URL=http://${{project-service.RAILWAY_PRIVATE_DOMAIN}}:3333
 IDENTITY_SERVICE_URL=http://${{identity-service.RAILWAY_PRIVATE_DOMAIN}}:3334
+AI_SERVICE_URL=http://${{ai-service.RAILWAY_PRIVATE_DOMAIN}}:3335
 ```
 
 Troque `project-service` e `identity-service` pelos nomes exatos exibidos no
@@ -120,6 +121,24 @@ banco. Por isso não existe `JWT_REFRESH_SECRET`.
 Cadastre `GOOGLE_CALLBACK_URL` exatamente igual em **Authorized redirect URIs**
 no Google Cloud.
 
+## Railway: AI Service e Ollama
+
+O AI Service valida o mesmo access token emitido pelo Identity Service e chama
+o Ollama pela rede privada:
+
+```env
+PORT=3335
+JWT_ACCESS_SECRET=${{shared.JWT_ACCESS_SECRET}}
+OLLAMA_URL=http://${{ollama.RAILWAY_PRIVATE_DOMAIN}}:11434
+OLLAMA_MODEL=qwen2.5:1.5b-instruct
+OLLAMA_TIMEOUT_SECONDS=300
+OLLAMA_KEEP_ALIVE=10m
+MAX_CONCURRENT_ANALYSES=1
+```
+
+O Ollama deve possuir um volume montado em `/root/.ollama`. Veja o procedimento
+completo em `docs/DEPLOY-AI-RAILWAY.md`.
+
 ## Fluxo de URLs em produção
 
 ```text
@@ -130,8 +149,10 @@ Browser na Vercel
 Gateway público no Railway
         ├── /projects, /drafts, /shares, /sessions
         |        -> Project Service pela rede privada
-        └── /auth
-                 -> Identity Service pela rede privada
+        ├── /auth
+        |        -> Identity Service pela rede privada
+        └── /ai
+                 -> AI Service -> Ollama pela rede privada
 ```
 
 ## Checklist antes do deploy
@@ -141,6 +162,8 @@ Gateway público no Railway
 - `VITE_API_URL` aponta para o Gateway, não para o Project Service.
 - `CORS_ORIGIN` do Gateway contém a URL exata da Vercel, sem caminho.
 - Project e Identity Services não possuem domínio público.
+- AI Service e Ollama não possuem domínio público.
+- O volume do Ollama está montado em `/root/.ollama`.
 - Bancos usam Reference Variables do Railway.
 - Segredos Google/JWT existem somente no Identity Service.
 - Após mudar a Vercel, foi feito um novo deploy.

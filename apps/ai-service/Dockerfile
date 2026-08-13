@@ -10,4 +10,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app ./app
 
 EXPOSE 3335
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "3335"]
+CMD ["sh", "-c", "uvicorn app.main:app --host :: --port ${PORT:-3335}"]
