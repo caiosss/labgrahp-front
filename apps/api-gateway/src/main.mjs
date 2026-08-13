@@ -3,6 +3,7 @@ import { createServer } from "node:http";
 const port = Number(process.env.PORT ?? 3000);
 const projectServiceUrl = process.env.PROJECT_SERVICE_URL ?? "http://localhost:3333";
 const identityServiceUrl = process.env.IDENTITY_SERVICE_URL ?? "http://localhost:3334";
+const aiServiceUrl = process.env.AI_SERVICE_URL ?? "http://localhost:3335";
 const allowedOrigins = (process.env.CORS_ORIGIN ?? "http://localhost:5173")
   .split(",")
   .map((origin) => origin.trim());
@@ -10,6 +11,10 @@ const allowedOrigins = (process.env.CORS_ORIGIN ?? "http://localhost:5173")
 const routeRequest = (pathname) => {
   if (pathname === "/auth" || pathname.startsWith("/auth/")) {
     return identityServiceUrl;
+  }
+
+  if (pathname === "/ai" || pathname.startsWith("/ai/")) {
+    return aiServiceUrl;
   }
 
   // Sessões anônimas continuam no serviço legado durante a migração.

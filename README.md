@@ -1,4 +1,12 @@
-# React + TypeScript + Vite
+# LabGraph
+
+## Análise de gráficos com IA
+
+O ambiente local inclui um AI Service em Python/FastAPI e um Ollama privado com
+`qwen2.5:1.5b-instruct`. Consulte [apps/ai-service/README.md](apps/ai-service/README.md)
+para arquitetura, comandos e contrato da análise.
+
+## Frontend
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 

@@ -39,7 +39,10 @@ export class ApiError extends Error {
 
 const getApiErrorMessage = async (response: Response) => {
     try {
-        const body = (await response.clone().json()) as { message?: unknown };
+        const body = (await response.clone().json()) as {
+            detail?: unknown;
+            message?: unknown;
+        };
 
         if (typeof body.message === "string" && body.message.trim()) {
             return body.message;
@@ -47,6 +50,10 @@ const getApiErrorMessage = async (response: Response) => {
 
         if (Array.isArray(body.message)) {
             return body.message.filter((item) => typeof item === "string").join(" ");
+        }
+
+        if (typeof body.detail === "string" && body.detail.trim()) {
+            return body.detail;
         }
     } catch {
         // Algumas respostas de infraestrutura não possuem JSON.

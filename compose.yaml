@@ -9,6 +9,7 @@ services:
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
       PROJECT_SERVICE_URL: http://project-service:3333
       IDENTITY_SERVICE_URL: http://identity-service:3334
+      AI_SERVICE_URL: http://ai-service:3335
     ports:
       - "3000:3000"
     depends_on:
@@ -16,12 +17,62 @@ services:
         condition: service_healthy
       identity-service:
         condition: service_healthy
+      ai-service:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--spider", "http://localhost:3000/health"]
       interval: 10s
       timeout: 3s
       retries: 5
     restart: unless-stopped
+
+  ai-service:
+    build:
+      context: ./apps/ai-service
+    environment:
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-local-development-only-change-me}
+      OLLAMA_URL: http://ollama:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:1.5b-instruct}
+      OLLAMA_TIMEOUT_SECONDS: 180
+      OLLAMA_KEEP_ALIVE: 10m
+      MAX_CONCURRENT_ANALYSES: 1
+    depends_on:
+      ollama-model:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:3335/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:0.12.3
+    environment:
+      OLLAMA_HOST: "[::]:11434"
+      OLLAMA_KEEP_ALIVE: 10m
+      OLLAMA_MAX_LOADED_MODELS: 1
+      OLLAMA_NUM_PARALLEL: 1
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    restart: unless-stopped
+
+  ollama-model:
+    image: ollama/ollama:0.12.3
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >-
+        until ollama list >/dev/null 2>&1; do sleep 2; done;
+        ollama pull ${OLLAMA_MODEL:-qwen2.5:1.5b-instruct}
+    depends_on:
+      - ollama
+    restart: "no"
 
   project-service:
     build:
@@ -139,3 +190,4 @@ volumes:
   project-db-data:
   identity-db-data:
   kafka-data:
+  ollama-data:

@@ -4,6 +4,7 @@ import type { ChartConfig } from "../../../types/chart";
 import { generateChartEquationSummaries } from "../../../utils/chart/chart-equations";
 import { exportPlotlyChartAsPDF } from "../../../utils/chart/export-chart-pdf";
 import { ChartPreview } from "../chart-preview";
+import { ChartAiAnalysis } from "./chart-ai-analysis";
 
 interface ChartPreviewPanelProps {
     chart: ChartConfig;
@@ -137,6 +138,8 @@ export const ChartPreviewPanel = ({ chart }: ChartPreviewPanelProps) => {
                     )}
                 </div>
             )}
+
+            <ChartAiAnalysis chart={chart} />
 
             <p className="mb-2 text-xs text-slate-500 sm:hidden">
                 Deslize o gráfico para os lados para visualizar todos os dados.
