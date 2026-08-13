@@ -1,10 +1,21 @@
-import { BarChart3, Table2 } from "lucide-react";
+import { BarChart3, LoaderCircle, Table2, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
     fetchChartDraft,
+    deleteProjectFromApi,
     fetchProjects,
     fetchTableDraft,
 } from "../services/project-api";
+import { Button } from "../components/ui/button";
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "../components/ui/dialog";
 import { logClientError } from "../services/client-logger";
 import { useProjectStore } from "../store/project-store";
 import type { ProjectDto } from "../types/project-dto";
@@ -28,7 +39,32 @@ export const HomePage = ({
     const setProjects = useProjectStore((state) => state.setProjects);
     const setChartDraft = useProjectStore((state) => state.setChartDraft);
     const setTableDraft = useProjectStore((state) => state.setTableDraft);
+    const removeProject = useProjectStore((state) => state.removeProject);
     const [projectsLoadError, setProjectsLoadError] = useState<string>();
+    const [projectToDelete, setProjectToDelete] = useState<ProjectDto>();
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [deleteError, setDeleteError] = useState<string>();
+
+    const handleDeleteProject = async () => {
+        if (!projectToDelete || isDeleting) return;
+
+        setIsDeleting(true);
+        setDeleteError(undefined);
+
+        try {
+            await deleteProjectFromApi(projectToDelete.id);
+            removeProject(projectToDelete.id);
+            setProjectToDelete(undefined);
+        } catch (error) {
+            setDeleteError(
+                error instanceof Error
+                    ? error.message
+                    : "Não foi possível excluir o projeto.",
+            );
+        } finally {
+            setIsDeleting(false);
+        }
+    };
 
     useEffect(() => {
         let shouldUpdateState = true;
@@ -205,31 +241,94 @@ export const HomePage = ({
                     ) : (
                         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                             {projects.map((project) => (
-                                <button
+                                <div
                                     key={project.id}
-                                    onClick={() => onOpenProject(project)}
-                                    className="cursor-pointer rounded-xl border border-slate-200 p-4 text-left transition hover:border-blue-500 hover:bg-slate-50"
+                                    className="flex items-stretch rounded-xl border border-slate-200 transition hover:border-blue-500 hover:bg-slate-50"
                                 >
-                                    <div className="mb-2 flex items-center justify-between gap-3">
-                                        <span className="font-medium text-slate-900">
-                                            {project.name}
-                                        </span>
+                                    <button
+                                        className="min-w-0 flex-1 cursor-pointer p-4 text-left"
+                                        onClick={() => onOpenProject(project)}
+                                    >
+                                        <div className="mb-2 flex items-center justify-between gap-3">
+                                            <span className="truncate font-medium text-slate-900">
+                                                {project.name}
+                                            </span>
 
-                                        <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600">
-                                            {project.type === "chart" ? "Grafico" : "Tabela"}
-                                        </span>
-                                    </div>
+                                            <span className="shrink-0 rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600">
+                                                {project.type === "chart" ? "Gráfico" : "Tabela"}
+                                            </span>
+                                        </div>
 
-                                    <p className="text-xs text-slate-500">
-                                        Atualizado em{" "}
-                                        {new Date(project.updatedAt).toLocaleString("pt-BR")}
-                                    </p>
-                                </button>
+                                        <p className="text-xs text-slate-500">
+                                            Atualizado em{" "}
+                                            {new Date(project.updatedAt).toLocaleString("pt-BR")}
+                                        </p>
+                                    </button>
+
+                                    <button
+                                        aria-label={`Excluir ${project.name}`}
+                                        className="m-2 flex w-10 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+                                        onClick={() => {
+                                            setDeleteError(undefined);
+                                            setProjectToDelete(project);
+                                        }}
+                                        title="Excluir projeto"
+                                        type="button"
+                                    >
+                                        <Trash2 size={18} />
+                                    </button>
+                                </div>
                             ))}
                         </div>
                     )}
                 </section>
             </div>
+
+            <Dialog
+                open={Boolean(projectToDelete)}
+                onOpenChange={(open) => {
+                    if (!open && !isDeleting) {
+                        setProjectToDelete(undefined);
+                        setDeleteError(undefined);
+                    }
+                }}
+            >
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Excluir projeto?</DialogTitle>
+                        <DialogDescription>
+                            O projeto “{projectToDelete?.name}” deixará de aparecer na sua lista. Esta ação não pode ser desfeita pela interface.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    {deleteError && (
+                        <p className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">
+                            {deleteError}
+                        </p>
+                    )}
+
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button disabled={isDeleting} type="button" variant="outline">
+                                Cancelar
+                            </Button>
+                        </DialogClose>
+                        <Button
+                            disabled={isDeleting}
+                            onClick={() => void handleDeleteProject()}
+                            type="button"
+                            variant="destructive"
+                        >
+                            {isDeleting ? (
+                                <LoaderCircle className="animate-spin" size={17} />
+                            ) : (
+                                <Trash2 size={17} />
+                            )}
+                            {isDeleting ? "Excluindo..." : "Excluir projeto"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </main>
     );
 

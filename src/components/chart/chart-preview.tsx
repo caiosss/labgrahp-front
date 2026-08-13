@@ -69,6 +69,8 @@ export const ChartPreview = ({ chart, onReady }: ChartPreviewProps) => {
     const legendFontSize = Math.min(Number(chart.appearance.legendFontSize) || 12, isCompact ? 10 : 20);
     const configuredHeight = Number(chart.appearance.height) || 560;
     const previewHeight = isCompact ? Math.min(configuredHeight, 380) : configuredHeight;
+    const legendPosition = chart.appearance.legendPosition ?? "right";
+    const isLegendBelow = legendPosition === "bottom";
     const allValidPoints = chart.series.flatMap((serie) =>
         getValidPoints(serie.points),
     );
@@ -307,15 +309,17 @@ export const ChartPreview = ({ chart, onReady }: ChartPreviewProps) => {
                     font: {
                         size: legendFontSize,
                     },
-                    orientation: isCompact ? "h" : "v",
-                    x: isCompact ? 0 : undefined,
-                    y: isCompact ? -0.24 : undefined,
+                    orientation: isLegendBelow ? "h" : "v",
+                    x: isLegendBelow ? 0 : 1.02,
+                    xanchor: "left",
+                    y: isLegendBelow ? -0.24 : 1,
+                    yanchor: "top",
                 },
                 margin: {
                     l: isCompact ? 46 : 64,
-                    r: isCompact ? 10 : 24,
+                    r: chart.showLegend && !isLegendBelow ? (isCompact ? 150 : 190) : 24,
                     t: isCompact ? 56 : 72,
-                    b: isCompact && chart.showLegend ? 94 : 64,
+                    b: chart.showLegend && isLegendBelow ? (isCompact ? 94 : 110) : 64,
                 },
             }}
             config={{

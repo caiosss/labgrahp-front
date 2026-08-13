@@ -1,4 +1,4 @@
-import type { ChartConfig, ChartMode } from "../../../types/chart";
+import type { ChartConfig, ChartMode, LegendPosition } from "../../../types/chart";
 
 interface ChartAppearanceSectionProps {
     chart: ChartConfig;
@@ -70,6 +70,26 @@ export const ChartAppearanceSection = ({
                         }
                         className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500"
                     />
+                </div>
+
+                <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700">
+                        Posição da legenda
+                    </label>
+
+                    <select
+                        value={chart.appearance.legendPosition ?? "right"}
+                        onChange={(event) =>
+                            updateAppearance(
+                                "legendPosition",
+                                event.target.value as LegendPosition,
+                            )
+                        }
+                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500"
+                    >
+                        <option value="right">À direita do gráfico</option>
+                        <option value="bottom">Abaixo do gráfico</option>
+                    </select>
                 </div>
             </div>
 

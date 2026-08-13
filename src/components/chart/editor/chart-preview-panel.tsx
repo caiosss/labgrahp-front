@@ -138,13 +138,22 @@ export const ChartPreviewPanel = ({ chart }: ChartPreviewPanelProps) => {
                 </div>
             )}
 
-            <div className="min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white p-0 sm:p-4">
-                <ChartPreview
-                    chart={chart}
-                    onReady={(chartElement) => {
-                        chartElementRef.current = chartElement;
-                    }}
-                />
+            <p className="mb-2 text-xs text-slate-500 sm:hidden">
+                Deslize o gráfico para os lados para visualizar todos os dados.
+            </p>
+
+            <div
+                className="overflow-x-auto overscroll-x-contain rounded-xl border border-slate-200 bg-white p-0 sm:p-4"
+                aria-label="Visualização do gráfico com rolagem horizontal em telas pequenas"
+            >
+                <div className="min-w-[680px] sm:min-w-0">
+                    <ChartPreview
+                        chart={chart}
+                        onReady={(chartElement) => {
+                            chartElementRef.current = chartElement;
+                        }}
+                    />
+                </div>
             </div>
         </section>
     );

@@ -205,6 +205,9 @@ export const deleteProjectFromApi = (projectId: string) => {
     return apiRequest<{ removed: boolean }>(`/projects/${projectId}`, {
         authentication: "identity-or-anonymous",
         method: "DELETE",
+    }).then((result) => {
+        removePendingProject(projectId);
+        return result;
     });
 };
 

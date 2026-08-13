@@ -50,6 +50,7 @@ export const initialChart: ChartConfig = {
         axisTitleFontSize: "14",
         tickFontSize: "12",
         legendFontSize: "12",
+        legendPosition: "right",
         fontFamily: "Arial",
         plotBackgroundColor: "#ffffff",
         paperBackgroundColor: "#ffffff",

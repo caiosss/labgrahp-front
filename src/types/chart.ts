@@ -1,4 +1,5 @@
 export type ChartMode = "markers" | "lines" | "lines+markers";
+export type LegendPosition = "right" | "bottom";
 
 export type AxisTickMode = "step" | "custom";
 
@@ -97,6 +98,7 @@ export interface ChartAppearance {
     axisTitleFontSize: string;
     tickFontSize: string;
     legendFontSize: string;
+    legendPosition: LegendPosition;
     fontFamily: string;
     plotBackgroundColor: string;
     paperBackgroundColor: string;
