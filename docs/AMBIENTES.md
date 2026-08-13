@@ -88,11 +88,14 @@ domínio público para `VITE_API_URL` na Vercel.
 PORT=3333
 CORS_ORIGIN=https://DOMINIO-DO-FRONTEND.vercel.app
 DATABASE_URL=${{Postgres-Projects.DATABASE_URL}}
+JWT_ACCESS_SECRET=${{shared.JWT_ACCESS_SECRET}}
 KAFKA_BROKERS=ENDERECO-PRIVADO-DO-KAFKA
 KAFKA_CLIENT_ID=project-service
 ```
 
 Use uma Reference Variable para o Postgres; não copie usuário e senha à mão.
+`JWT_ACCESS_SECRET` deve referenciar a mesma Shared Variable usada pelo Identity
+Service. O Identity assina o token e o Project Service valida a assinatura.
 O Kafka ainda não é consumido pelo código, então suas variáveis podem ser
 omitidas até a implementação.
 
@@ -107,7 +110,7 @@ GOOGLE_CLIENT_ID=valor-do-google-cloud
 GOOGLE_CLIENT_SECRET=segredo-do-google-cloud
 GOOGLE_CALLBACK_URL=https://DOMINIO-DO-FRONTEND.vercel.app/api/auth/google/callback
 AUTH_PUBLIC_PATH_PREFIX=/api
-JWT_ACCESS_SECRET=segredo-aleatorio-proprio
+JWT_ACCESS_SECRET=${{shared.JWT_ACCESS_SECRET}}
 JWT_ACCESS_EXPIRATION=900
 ```
 

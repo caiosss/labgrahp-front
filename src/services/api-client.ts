@@ -36,6 +36,24 @@ export class ApiError extends Error {
     }
 }
 
+const getApiErrorMessage = async (response: Response) => {
+    try {
+        const body = (await response.clone().json()) as { message?: unknown };
+
+        if (typeof body.message === "string" && body.message.trim()) {
+            return body.message;
+        }
+
+        if (Array.isArray(body.message)) {
+            return body.message.filter((item) => typeof item === "string").join(" ");
+        }
+    } catch {
+        // Algumas respostas de infraestrutura não possuem JSON.
+    }
+
+    return "A API não conseguiu processar a solicitação.";
+};
+
 const buildApiUrl = (path: string) => {
     const normalizedPath = path.startsWith("/") ? path : `/${path}`;
 
@@ -224,7 +242,10 @@ export const apiRequest = async <T>(
     }
 
     if (!response.ok) {
-        const error = new ApiError("A API não conseguiu processar a solicitação.", response.status);
+        const error = new ApiError(
+            await getApiErrorMessage(response),
+            response.status,
+        );
 
         logClientError("api-request-error", error, {
             method,

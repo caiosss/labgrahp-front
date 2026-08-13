@@ -2,7 +2,7 @@ import type { SharedDraftDto, SharedProjectDto } from "../../packages/shared/src
 import type { ChartDraftDto, ProjectDto, TableDraftDto } from "../types/project-dto";
 import type { ChartConfig } from "../types/chart";
 import type { AbntTableConfig } from "../types/table";
-import { apiRequest } from "./api-client";
+import { ApiError, apiRequest } from "./api-client";
 import { logClientError } from "./client-logger";
 import {
     getPendingProjects,
@@ -85,6 +85,12 @@ const getSaveFailureMessage = (error: unknown) => {
     return "Falha ao comunicar com a API.";
 };
 
+const canUseLocalFallback = (error: unknown) => {
+    // Rede e indisponibilidade temporária podem ser sincronizadas depois.
+    // Erros de autenticação, permissão e validação não devem ser mascarados.
+    return !(error instanceof ApiError) || error.status >= 500;
+};
+
 const syncPendingProjects = async () => {
     const pendingProjects = getPendingProjects();
     const syncedProjects: ProjectDto[] = [];
@@ -159,6 +165,10 @@ export const saveProjectToApi = async (
             project: savedProject,
         };
     } catch (error) {
+        if (!canUseLocalFallback(error)) {
+            throw error;
+        }
+
         const message = getSaveFailureMessage(error);
         const savedLocally = savePendingProject(projectToSave, message);
 
