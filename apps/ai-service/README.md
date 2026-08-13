@@ -12,6 +12,13 @@ resultados calculados pelo NumPy, não uma imagem do gráfico.
   outliers pelo intervalo interquartil.
 - Limitar a concorrência de análises.
 - Solicitar ao Ollama uma resposta validada por JSON Schema.
+- Exigir um relatório mínimo com resumo substancial, achados, limitações e sugestões.
+- Rejeitar e gerar novamente respostas com contradições detectáveis, como afirmar
+  a existência de outliers quando o cálculo IQR encontrou zero.
+
+Os valores numéricos, o resumo, os achados e as ressalvas exibidos no frontend
+são montados pelo Python a partir dos cálculos verificados. O Qwen complementa
+as sugestões, mas não é a fonte das relações estatísticas apresentadas.
 
 ## Executar localmente
 

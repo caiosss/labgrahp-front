@@ -28,6 +28,9 @@ class StatisticsTest(unittest.TestCase):
 
         self.assertEqual(result.pointCount, 3)
         self.assertEqual(result.correlation, 1.0)
+        self.assertEqual(result.correlationStrength, "muito forte")
+        self.assertEqual(result.trend, "crescente")
+        self.assertEqual(result.dataQuality, "limitada")
         self.assertEqual(result.linearRegression.slope, 2.0)  # type: ignore[union-attr]
         self.assertEqual(result.linearRegression.rSquared, 1.0)  # type: ignore[union-attr]
 

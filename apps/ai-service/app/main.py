@@ -6,6 +6,7 @@ from pydantic import ValidationError
 
 from .config import get_settings
 from .ollama_client import interpret_chart
+from .report_builder import build_verified_report
 from .schemas import AnalyzeChartRequest, AnalyzeChartResponse
 from .security import Identity, require_identity
 from .statistics import calculate_chart_statistics
@@ -54,9 +55,15 @@ async def analyze_chart(
             detail="O modelo de IA ainda não está disponível. Aguarde o download e tente novamente.",
         ) from error
 
+    verified_report = build_verified_report(
+        request.chart,
+        statistics,
+        interpretation,
+    )
+
     return AnalyzeChartResponse(
-        **interpretation.model_dump(),
+        **verified_report.model_dump(),
         statistics=statistics,
         model=settings.ollama_model,
-        disclaimer="Análise assistida por IA. Confira os resultados antes de usá-los em trabalhos científicos.",
+        disclaimer="Análise assistida por IA. O resultado pode demorar alguns minutos para ser gerado. Confira os resultados antes de usá-los em trabalhos científicos.",
     )

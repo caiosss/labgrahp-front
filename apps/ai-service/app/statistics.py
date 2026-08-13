@@ -36,6 +36,41 @@ def _find_outliers(x_values: np.ndarray, y_values: np.ndarray) -> list[dict[str,
     ]
 
 
+def _correlation_strength(correlation: float | None) -> str:
+    if correlation is None:
+        return "indefinida"
+
+    absolute_value = abs(correlation)
+    if absolute_value < 0.2:
+        return "muito fraca"
+    if absolute_value < 0.4:
+        return "fraca"
+    if absolute_value < 0.7:
+        return "moderada"
+    if absolute_value < 0.9:
+        return "forte"
+    return "muito forte"
+
+
+def _trend(slope: float | None, y_values: np.ndarray) -> str:
+    if slope is None:
+        return "indefinida"
+
+    y_range = float(np.max(y_values) - np.min(y_values))
+    tolerance = max(y_range * 0.01, 1e-9)
+    if abs(slope) <= tolerance:
+        return "estável"
+    return "crescente" if slope > 0 else "decrescente"
+
+
+def _data_quality(point_count: int) -> str:
+    if point_count < 3:
+        return "insuficiente"
+    if point_count < 6:
+        return "limitada"
+    return "adequada"
+
+
 def calculate_chart_statistics(chart: ChartInput) -> list[SeriesStatistics]:
     results: list[SeriesStatistics] = []
 
@@ -57,12 +92,14 @@ def calculate_chart_statistics(chart: ChartInput) -> list[SeriesStatistics]:
 
         correlation: float | None = None
         regression: LinearRegression | None = None
+        slope_value: float | None = None
 
         if x_has_variation and y_has_variation:
             correlation = _round(np.corrcoef(x_values, y_values)[0, 1])
 
         if x_has_variation:
             slope, intercept = np.polyfit(x_values, y_values, 1)
+            slope_value = float(slope)
             predictions = slope * x_values + intercept
             residual_sum = float(np.sum((y_values - predictions) ** 2))
             total_sum = float(np.sum((y_values - np.mean(y_values)) ** 2))
@@ -84,6 +121,9 @@ def calculate_chart_statistics(chart: ChartInput) -> list[SeriesStatistics]:
                 xMean=_round(np.mean(x_values)),
                 yMean=_round(np.mean(y_values)),
                 correlation=correlation,
+                correlationStrength=_correlation_strength(correlation),
+                trend=_trend(slope_value, y_values),
+                dataQuality=_data_quality(len(valid_points)),
                 linearRegression=regression,
                 possibleOutliers=_find_outliers(x_values, y_values),
             )

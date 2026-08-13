@@ -14,6 +14,9 @@ export interface AiSeriesStatistics {
     xMean: number;
     yMean: number;
     correlation: number | null;
+    correlationStrength: "indefinida" | "muito fraca" | "fraca" | "moderada" | "forte" | "muito forte";
+    trend: "crescente" | "decrescente" | "estável" | "indefinida";
+    dataQuality: "insuficiente" | "limitada" | "adequada";
     linearRegression: AiLinearRegression | null;
     possibleOutliers: Array<{ x: number; y: number }>;
 }
